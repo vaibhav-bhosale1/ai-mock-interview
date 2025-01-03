@@ -5,14 +5,17 @@ import { MockInterview } from "../../../../../utils/schema";
 import { eq } from "drizzle-orm";
 import Question from "./_components/Questions";
 import RecordAnsSection from "./_components/RecordAnsSection"
+import {  LoaderPinwheel } from "lucide-react";
+import { Button } from "../../../../../components/ui/button";
+
 function StartInterview({ params: paramsPromise }) {
   const params = use(paramsPromise); // Resolve the `params` Promise
   const { interviewId } = params; // Safely access `interviewId`
-    const [activequestionindex,setactivequestionindex]=useState(1)
+    const [activequestionindex,setactivequestionindex]=useState(0)
   const [mockInterviewQuestion, setMockInterviewQuestion] = useState([]); // Store questions
   const [isLoading, setIsLoading] = useState(true); // Loading state
   const [error, setError] = useState(null); // Error state for handling fetch issues
-
+  const [interviewData,setinterviewData]=useState();
   // Fetch interview details on component mount
   useEffect(() => {
     GetInterviewDetails();
@@ -26,6 +29,7 @@ function StartInterview({ params: paramsPromise }) {
         .where(eq(MockInterview.mockId, interviewId));
 
       // Parse JSON response
+      setinterviewData(result[0]);
       const jsonMockResp = JSON.parse(result[0]?.jsonMockResp || "{}");
 
       // Extract the array of questions
@@ -42,7 +46,7 @@ function StartInterview({ params: paramsPromise }) {
   return (
     <div>
       {isLoading ? (
-        <p>Loading...</p> // Show loading message
+        <p><LoaderPinwheel height={200} width={200} className="items-center mt-40 ml-70 pl-70 absolute animate-ping left-56"/></p> // Show loading message
       ) : error ? (
         <p className="text-red-500">{error}</p> // Show error message if fetching fails
       ) : (
@@ -50,9 +54,18 @@ function StartInterview({ params: paramsPromise }) {
           {/* Render questions */}
           <Question mockInterviewQuestion={mockInterviewQuestion} activequestionindex={activequestionindex} />
 
-          <RecordAnsSection  mockInterviewQuestion={mockInterviewQuestion} activequestionindex={activequestionindex}/>
+          <RecordAnsSection  mockInterviewQuestion={mockInterviewQuestion} activequestionindex={activequestionindex} interviewData={interviewData}/>
         </div>
       )}
+      <div className="flex justify-end gap-5">
+        {activequestionindex>0&&   <Button onClick={()=>setactivequestionindex(activequestionindex-1)}>Previous Question</Button>}
+        {activequestionindex!=mockInterviewQuestion?.length-1&& <Button onClick={()=>setactivequestionindex(activequestionindex+1)}>Next Question</Button>}
+       
+        {activequestionindex==mockInterviewQuestion?.length-1&&  <Button>End Interview</Button>}
+       
+
+
+      </div>
     </div>
   );
 }

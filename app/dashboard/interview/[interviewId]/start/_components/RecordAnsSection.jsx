@@ -6,12 +6,17 @@ import { Button } from '../../../../../../components/ui/button'
 import useSpeechToText from 'react-hook-speech-to-text';
 import { is } from 'drizzle-orm'
 import { Mic } from 'lucide-react'
-import { toast } from '../../../../../../components/hooks/use-toast'
+import {chatSession} from '../../../../../../utils/GeminiAiModel'
+import { db } from '../../../../../../utils/db'
+import { useUser } from '@clerk/nextjs'
+import moment from 'moment'
+import { UserAnswer } from '../../../../../../utils/schema'
 
 
-
-function RecordAnsSection ({ mockInterviewQuestion,activequestionindex}){
+function RecordAnsSection ({ mockInterviewQuestion,activequestionindex,interviewData}){
     const [userans,setuserans]=useState('');
+    const [loading,setloading]=useState(false);
+    const {user}=useUser();
     const {
         error,
         interimResult,
@@ -29,20 +34,53 @@ function RecordAnsSection ({ mockInterviewQuestion,activequestionindex}){
             ))
       },[results])
 
-      const SaveUserAnswer=()=>{
+      useEffect(()=>{
+        if(!isRecording){
+          Updateuseransdb();
+        }
+      },[userans])
+
+      const StartStopRecording= async()=>{
         if(isRecording){
             stopSpeechToText();
-            if(userans?.length<10){
-              toast('Error while saving your answer please record again')
-            }
-            const feedbackPrompt="Question:"+mockInterviewQuestion[activequestionindex]?.question+
-            ", User Answer: "+userans+", Depends on question and user answer for given question please give feedback as area of improvement"
+          
+         
         }
         else{
             startSpeechToText();
         }
       }
       
+      const Updateuseransdb=async()=>{
+        setloading(true)
+        console.log(userans)
+        const feedbackPrompt="Question:"+mockInterviewQuestion[activequestionindex]?.question+
+        ", User Answer: "+userans+", Depends on question and user answer for given interview question"+
+        "please give us rating rating for answer and feedback as area of improvement if any"+
+        "in just 3-5 lines to improve in JSON format with rating field and feedback field";
+
+        const result=await chatSession.sendMessage(feedbackPrompt);
+        const mockJsonrep=(result.response.text()).replace('```json','').replace('```','')
+        console.log(mockJsonrep)
+        const JsonFeedbackResp=JSON.parse(mockJsonrep)
+        const resp=await db.insert(UserAnswer).values({
+          mockIdRef:interviewData?.mockId,
+          question:mockInterviewQuestion[activequestionindex]?.question,
+          correctAns:mockInterviewQuestion[activequestionindex]?.answer,
+          userAns:userans,
+          feedback:JsonFeedbackResp?.feedback,
+          rating:JsonFeedbackResp?.rating,
+          userEmail:user?.primaryEmailAddress.emailAddress,
+          createdAt:moment().format('DD-MM-yyyy') 
+
+        })
+
+        
+        setuserans('')
+        setloading(false)
+      }
+
+
       if (error) return <p>Web Speech API is not available in this browser 🤷‍</p>;
   return (
     <div className='flex justify-center items-center flex-col'>
@@ -57,11 +95,11 @@ function RecordAnsSection ({ mockInterviewQuestion,activequestionindex}){
         } />
       
     </div>
-    <Button variant="outline" className="my-10" onClick={SaveUserAnswer}>
+    <Button disabled={loading}
+    variant="outline" className="my-10" onClick={StartStopRecording}>
         {isRecording?
         <h2 className='text-red-600 flex gap-2'><Mic/>Stop Recording</h2>
-        :'Record Answer'}</Button>
-        <Button onClick={()=>console.log(userans)}>Show User Answer</Button>
+        :<h2>Record Answer</h2>}</Button>
     </div>
   )
 }

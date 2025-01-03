@@ -11,6 +11,7 @@ import { db } from '../../../../../../utils/db'
 import { useUser } from '@clerk/nextjs'
 import moment from 'moment'
 import { UserAnswer } from '../../../../../../utils/schema'
+import { toast } from '../../../../../../components/hooks/use-toast'
 
 
 function RecordAnsSection ({ mockInterviewQuestion,activequestionindex,interviewData}){
@@ -22,6 +23,7 @@ function RecordAnsSection ({ mockInterviewQuestion,activequestionindex,interview
         interimResult,
         isRecording,
         results,
+        setResults,
         startSpeechToText,
         stopSpeechToText,
       } = useSpeechToText({
@@ -29,13 +31,13 @@ function RecordAnsSection ({ mockInterviewQuestion,activequestionindex,interview
         useLegacyResults: false
       });
       useEffect(()=>{
-            results.map((result)=>(
+            results?.map((result)=>(
                 setuserans(prevAns=>prevAns+result?.transcript)
             ))
       },[results])
 
       useEffect(()=>{
-        if(!isRecording){
+        if(!isRecording&&userans?.length>3){
           Updateuseransdb();
         }
       },[userans])
@@ -43,8 +45,6 @@ function RecordAnsSection ({ mockInterviewQuestion,activequestionindex,interview
       const StartStopRecording= async()=>{
         if(isRecording){
             stopSpeechToText();
-          
-         
         }
         else{
             startSpeechToText();
@@ -74,9 +74,15 @@ function RecordAnsSection ({ mockInterviewQuestion,activequestionindex,interview
           createdAt:moment().format('DD-MM-yyyy') 
 
         })
+        if(resp){
+          alert('User answer stored succesfully')
+          setuserans('');
+          setResults([])
+        }
+        setResults([]);
 
         
-        setuserans('')
+   
         setloading(false)
       }
 
@@ -85,7 +91,7 @@ function RecordAnsSection ({ mockInterviewQuestion,activequestionindex,interview
   return (
     <div className='flex justify-center items-center flex-col'>
     <div className='flex flex-col justify-center items-center bg-black rounded-lg p-5 mt-20'> 
-        <Image src={"/webcam.jpeg"} width={300} height={300} alt='webcam' className='absolute'/>
+        <Image src={"/webcam.png"} width={300} height={300} alt='webcam' className='absolute'/>
         <Webcam
         mirrored={true}
         style={{height:300,

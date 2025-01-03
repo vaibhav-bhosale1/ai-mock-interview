@@ -7,6 +7,7 @@ import Question from "./_components/Questions";
 import RecordAnsSection from "./_components/RecordAnsSection"
 import {  LoaderPinwheel } from "lucide-react";
 import { Button } from "../../../../../components/ui/button";
+import Link from "next/link";
 
 function StartInterview({ params: paramsPromise }) {
   const params = use(paramsPromise); // Resolve the `params` Promise
@@ -60,8 +61,8 @@ function StartInterview({ params: paramsPromise }) {
       <div className="flex justify-end gap-5">
         {activequestionindex>0&&   <Button onClick={()=>setactivequestionindex(activequestionindex-1)}>Previous Question</Button>}
         {activequestionindex!=mockInterviewQuestion?.length-1&& <Button onClick={()=>setactivequestionindex(activequestionindex+1)}>Next Question</Button>}
-       
-        {activequestionindex==mockInterviewQuestion?.length-1&&  <Button>End Interview</Button>}
+  
+        {activequestionindex==mockInterviewQuestion?.length-1&&   <Link href={'/dashboard/interview/'+interviewData?.mockId+'/feedback'}> <Button>End Interview</Button></Link>}
        
 
 

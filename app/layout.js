@@ -26,7 +26,7 @@ export default function RootLayout({ children }) {
     {/* Wrap the layout in ThemeProvider */}
         <html lang="en">
           <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+            className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning
           >
           
             <NextTopLoader />

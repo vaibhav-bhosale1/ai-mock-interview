@@ -5,7 +5,7 @@ import Header from '../../dashboard/_components/Header'
 import Footer from '../Footer'
 import { usePathname } from 'next/navigation'
 import CallToAction from './CallToAction'
-const page = () => {
+const Howitworks = () => {
   const path=usePathname();
   return (
     <div className='h-full bg-black'>
@@ -26,4 +26,4 @@ const page = () => {
   )
 }
 
-export default page
+export default Howitworks

@@ -1,15 +1,15 @@
 import React from 'react'
-import HowItWorks from './howitworks/page'
+import Howitworks from './howitworks/page'
 import Header from '../dashboard/_components/Header'
 import Footer from './Footer'
-const page = () => {
+const HomePages = () => {
   return (
     <div>
         <Header/>
-      <HowItWorks/>
+      <Howitworks/>
       <Footer/>
     </div>
   )
 }
 
-export default page
+export default HomePages

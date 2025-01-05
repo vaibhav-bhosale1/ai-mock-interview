@@ -77,7 +77,7 @@ const Header = () => {
           <li
             onClick={scrollToSection} // Scroll to the "How It Works" section
             className={`hover:text-blue-600 hover:font-bold transition-all cursor-pointer ${
-              path == "/howitworks" && "text-blue-600 font-bold"
+              path == "/contact" && "text-blue-600 font-bold"
             }`}
           >
            Contact

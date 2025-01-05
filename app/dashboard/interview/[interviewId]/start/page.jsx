@@ -47,7 +47,7 @@ function StartInterview({ params: paramsPromise }) {
   return (
     <div>
       {isLoading ? (
-        <p><LoaderPinwheel height={200} width={200} className="items-center mt-40 ml-70 pl-70 absolute animate-ping left-56"/></p> // Show loading message
+        <p><LoaderPinwheel height={200} width={200} className="items-center mt-40 ml-70 pl-70 absolute animate-ping left-56" color="white"/></p> // Show loading message
       ) : error ? (
         <p className="text-red-500">{error}</p> // Show error message if fetching fails
       ) : (

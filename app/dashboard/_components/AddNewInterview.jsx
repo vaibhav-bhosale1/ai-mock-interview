@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import {chatSession} from "../../../utils/GeminiAiModel"
-import { v4 as uuidv4 } from 'uuid';
-import {db} from "../../../utils/db"
+import { chatSession } from "../../../utils/GeminiAiModel";
+import { v4 as uuidv4 } from "uuid";
+import { db } from "../../../utils/db";
 import {
   Dialog,
   DialogContent,
@@ -10,60 +10,74 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../../../components/ui/dialog"
+} from "../../../components/ui/dialog";
 
 import { Button } from "../../../components/ui/button";
 import { Textarea } from "../../../components/ui/textarea";
 import { Input } from "../../../components/ui/input";
 import { ChatSession } from "@google/generative-ai";
 import { LoaderPinwheel } from "lucide-react";
-import {MockInterview} from "../../../utils/schema"
+import { MockInterview } from "../../../utils/schema";
 import { useUser } from "@clerk/nextjs";
 import moment from "moment";
 import { useRouter } from "next/navigation";
 
 const AddNewInterview = () => {
   const [opendialog, setopendialog] = useState(false);
-  const [jobposition, setjobposition] = useState();
-  const [jobdesc, setjobdesc] = useState();
-  const [jobexp, setjobexp] = useState();
+  const [jobposition, setjobposition] = useState("");
+  const [jobdesc, setjobdesc] = useState("");
+  const [jobexp, setjobexp] = useState("");
   const [loading, setloading] = useState(false);
-  const [jsonresp,setjsonresp]=useState([])
-  const router=useRouter();
-  const {user}=useUser();
+  const [jsonresp, setjsonresp] = useState([]);
+  const router = useRouter();
+  const { user } = useUser();
 
-  const onSubmit = async(event) => {
+  const onSubmit = async (event) => {
     setloading(true);
     event.preventDefault();
     console.log(jobposition, jobdesc, jobexp);
-    // Close the dialog after submission if needed
-    const Inputprompt="Job position:"+jobposition+", Job description:"+jobdesc+", Years of experience:"+jobexp+", Depends on this info give me"+process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT+" interview question and answer which will train me quite good for interview in JSON format"
-  
-    const result=await chatSession.sendMessage(Inputprompt);
-    const MockJsonResp=(result.response.text()).replace('```json','').replace('```','')
-    console.log(JSON.parse(MockJsonResp));
-    setjsonresp(MockJsonResp)
-    if(MockJsonResp){
-    const resp=await db.insert(MockInterview).values({
-      mockId:uuidv4(),
-      jsonMockResp:MockJsonResp,
-      jobPosition:jobposition,
-      jobDesc:jobdesc,
-      jobExperience:jobexp,
-      createdBy:user?.primaryEmailAddress.emailAddress,
-      createdAt:moment().format('DD-MM-yyyy') 
-    }).returning({mockId:MockInterview.mockId})
 
-    console.log("Inserted ID",resp)
-  }else{
-    console.log("Error")
-  }
-    setloading(false)
-    if(resp){
-      setopendialog(false)
-      router.push('/dashboard/interview/'+resp[0]?.mockId)
+    const Inputprompt = `Job position: ${jobposition}, Job description: ${jobdesc}, Years of experience: ${jobexp}, Depends on this info give me ${process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT} interview questions and answers which will train me quite good for interview in JSON format`;
+
+    try {
+      const result = await chatSession.sendMessage(Inputprompt);
+      const MockJsonResp = result.response
+        .text()
+        .replace("```json", "")
+        .replace("```", "");
+      console.log(JSON.parse(MockJsonResp));
+      setjsonresp(MockJsonResp);
+
+      let resp = null; // Declare `resp` outside the block
+      if (MockJsonResp) {
+        resp = await db
+          .insert(MockInterview)
+          .values({
+            mockId: uuidv4(),
+            jsonMockResp: MockJsonResp,
+            jobPosition: jobposition,
+            jobDesc: jobdesc,
+            jobExperience: jobexp,
+            createdBy: user?.primaryEmailAddress.emailAddress,
+            createdAt: moment().format("DD-MM-yyyy"),
+          })
+          .returning({ mockId: MockInterview.mockId });
+
+        console.log("Inserted ID", resp);
+      } else {
+        console.log("Error: No response generated");
+      }
+
+      setloading(false);
+
+      if (resp) {
+        setopendialog(false);
+        router.push("/dashboard/interview/" + resp[0]?.mockId);
+      }
+    } catch (error) {
+      console.error("An error occurred:", error);
+      setloading(false); // Ensure spinner stops on error
     }
-
   };
 
   return (
@@ -121,15 +135,19 @@ const AddNewInterview = () => {
                   <Button
                     onClick={() => setopendialog(false)}
                     variant="ghost"
-                    type="button">
+                    type="button"
+                  >
                     Cancel
                   </Button>
                   <Button type="submit" disabled={loading}>
-                    {loading?
-                    <>
-                    <LoaderPinwheel className="animate-spin"/>Generating from AI
-                    </>:'Start Interview'
-                  }
+                    {loading ? (
+                      <>
+                        <LoaderPinwheel className="animate-spin" />
+                        Generating from AI
+                      </>
+                    ) : (
+                      "Start Interview"
+                    )}
                   </Button>
                 </div>
               </form>

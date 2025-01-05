@@ -87,10 +87,10 @@ function RecordAnsSection ({ mockInterviewQuestion,activequestionindex,interview
       }
 
 
-      if (error) return <p>Web Speech API is not available in this browser 🤷‍</p>;
+      if (error) return <p className='text-cyan-200'>Web Speech API is not available in this browser 🤷‍</p>;
   return (
     <div className='flex justify-center items-center flex-col'>
-    <div className='flex flex-col justify-center items-center bg-black rounded-lg p-5 mt-20'> 
+    <div className='flex flex-col justify-center items-center bg-black rounded-lg p-5 mt-20 border border-cyan-200'> 
         <Image src={"/webcam.png"} width={300} height={300} alt='webcam' className='absolute'/>
         <Webcam
         mirrored={true}
@@ -105,8 +105,10 @@ function RecordAnsSection ({ mockInterviewQuestion,activequestionindex,interview
     variant="outline" className="my-10" onClick={StartStopRecording}>
         {isRecording?
         <h2 className='text-red-600 flex gap-2'><Mic/>Stop Recording</h2>
-        :<h2>Record Answer</h2>}</Button>
+        :<h2>Record Answer</h2>}</Button> 
     </div>
+    
+    
   )
 }
 

@@ -38,8 +38,8 @@ const Interview = ({ params }) => {
     }
     
   return (
-    <div className='my-10 flex-col'>
-        <h2 className='font-bold text-2xl'>
+    <div className='my-10 flex-col min-h-max'>
+        <h2 className='font-bold text-2xl text-cyan-300'>
             Let's Get Started
         </h2>
         <div className='grid grid-cols-1 md:grid-cols-2 gap-10'>
@@ -48,17 +48,17 @@ const Interview = ({ params }) => {
                     <div className='flex flex-col p-5 rounded-lg border gap-5'>
                         {interviewData ? (
                                 <>
-                                <h2 className='text-lg'><strong>Job Role/Position:</strong> {interviewData.jobPosition}</h2>
-                                <h2 className='text-lg'><strong>Job Description/Tech Stack:</strong> {interviewData.jobDesc}</h2>
-                                <h2 className='text-lg'><strong>Years of Experience:</strong> {interviewData.jobExperience}</h2>
+                                <h2 className='text-lg text-cyan-100'><strong>Job Role/Position: </strong> {interviewData.jobPosition}</h2>
+                                <h2 className='text-lg text-cyan-100'><strong>Job Description/Tech Stack: </strong> {interviewData.jobDesc}</h2>
+                                <h2 className='text-lg text-cyan-100'><strong>Years of Experience :</strong> {interviewData.jobExperience}</h2>
                                 </>
 
                             ) : (
-                                <h2>Loading interview details...</h2>
+                                <h2 className='text-cyan-200'>Loading interview details...</h2>
                             )}
                     </div>
                     <div className='p-5 border rounded-lg border-yellow-300 bg-yellow-100'>
-                       <h2 className='flex gap-2 items-center text-yellow-500'><Lightbulb/><strong><span>Information</span></strong></h2> 
+                       <h2 className='flex gap-2 items-center text-yellow-800'><Lightbulb/><strong><span>Information</span></strong></h2> 
                         <h2 className='mt-3'>{process.env.NEXT_PUBLIC_INFORMATION}</h2>
                     </div>
 
@@ -73,8 +73,8 @@ const Interview = ({ params }) => {
                     <Button onClick={()=>setwebcam(false)} className='w-full' variant="ghost">Disable Web Cam and Microphone</Button>
                     </>
                     :<>
-                    <CameraIcon className='h-80 w-full my-7 p-20 bg-slate-100 rounded-lg border'/>
-                    <Button onClick={()=>setwebcam(true)} className='w-full' variant="ghost">Enable Web Cam and Microphone</Button>
+                    <CameraIcon className='h-80 w-full my-7 p-20 bg-gray-100 rounded-lg border'/>
+                    <Button onClick={()=>setwebcam(true)} className='w-full text-cyan-300 border border-cyan-100' variant="ghost">Enable Web Cam and Microphone</Button>
                     
                     </>
                     }
@@ -83,7 +83,7 @@ const Interview = ({ params }) => {
         </div>
         <div className='flex justify-end items-end mt-10'>
        
-            <Button className='w-40' onClick={()=>router.push('/dashboard/interview/'+params.interviewId+'/start')}>Start Interview</Button>
+            <Button className='w-40 text-white border border-cyan-100' variant='ghost' onClick={()=>router.push('/dashboard/interview/'+params.interviewId+'/start')}>Start Interview</Button>
         
         </div>
      

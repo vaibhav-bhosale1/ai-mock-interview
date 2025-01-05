@@ -1,7 +1,10 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Toaster } from "../components/ui/toaster"
+import { Toaster } from "../components/ui/toaster";
+import NextTopLoader from 'nextjs-toploader';
+import { ThemeProvider } from "next-themes";  // Import ThemeProvider for theme management
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -20,14 +23,17 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <ClerkProvider>
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-   <Toaster/>
-        {children}
-      </body>
-    </html>
+    {/* Wrap the layout in ThemeProvider */}
+        <html lang="en">
+          <body
+            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          >
+          
+            <NextTopLoader />
+            {children}
+          </body>
+        </html>
+    
     </ClerkProvider>
   );
 }

@@ -1,5 +1,5 @@
 import React from 'react'
-import HowItWorks from './howitworks/HowItWorks'
+import HowItWorks from './howitworks/page'
 import Header from '../dashboard/_components/Header'
 import Footer from './Footer'
 const page = () => {

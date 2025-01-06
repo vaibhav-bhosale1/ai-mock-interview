@@ -1,102 +1,117 @@
 "use client";
 import { UserButton, useAuth } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { Button } from "../../../components/ui/button";
 import Link from "next/link";
+import { Menu, X } from "lucide-react"; // Mobile menu icons
 
 const Header = () => {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
-  const { isSignedIn } = useAuth(); // Get user authentication status from Clerk
+  const { isSignedIn } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Mobile menu state
+
+  const path = usePathname();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const howItWorksRef = useRef(null); // Create a ref for the "How It Works" section
-
-  const scrollToSection = () => {
-    if (howItWorksRef.current) {
-      howItWorksRef.current.scrollIntoView({
-        behavior: "smooth", // Smooth scrolling effect
-        block: "start", // Align the section to the top
-      });
-    }
-  };
-
-  const path = usePathname();
-
   if (!mounted) return null;
 
   return (
-    <div className="flex p-4 justify-between  shadow-sm items-center bg-cyan-200 t">
-      <Link href={"/"}>
+    <header className="flex justify-between items-center p-4 shadow-sm bg-cyan-200">
+      {/* Logo */}
+      <Link href="/">
         <h1 className="text-xl font-bold">VirtueHireX</h1>
       </Link>
+
+      {/* Desktop Navigation Links */}
       <ul className="hidden md:flex gap-6 items-center">
-        <Link href={"/dashboard"}>
-          <li
-            className={`hover:text-blue-600 hover:font-bold transition-all cursor-pointer ${
-              path == "/dashboard" && "text-blue-600 font-bold"
-            }`}
-          >
-            Dashboard
-          </li>
-        </Link>
-        <Link href={"/features"}>
-          <li
-            className={`hover:text-blue-600 hover:font-bold transition-all cursor-pointer ${
-              path == "/features" && "text-blue-900 font-bold"
-            }`}
-          >
-            Features
-          </li>
-        </Link>
-        <Link href={"/pricing"}>
-          <li
-            className={`hover:text-blue-600 hover:font-bold transition-all cursor-pointer ${
-              path == "/upgrade" && "text-blue-600 font-bold"
-            }`}
-          >
-            Upgrade
-          </li>
-        </Link>
-        <Link href={"/howitworks"}>
-          <li
-            onClick={scrollToSection} // Scroll to the "How It Works" section
-            className={`hover:text-blue-600 hover:font-bold transition-all cursor-pointer ${
-              path == "/howitworks" && "text-blue-600 font-bold"
-            }`}
-          >
-            How it Works?
-          </li>
-        </Link>
-        <Link href={"/contact"}>
-          <li
-            onClick={scrollToSection} // Scroll to the "How It Works" section
-            className={`hover:text-blue-600 hover:font-bold transition-all cursor-pointer ${
-              path == "/contact" && "text-blue-600 font-bold"
-            }`}
-          >
-           Contact
-          </li>
-        </Link>
+        <NavLink href="/dashboard" label="Dashboard" path={path} />
+        <NavLink href="/features" label="Features" path={path} />
+        <NavLink href="/pricing" label="Pricing" path={path} />
+        <NavLink href="/howitworks" label="How it Works?" path={path} />
+        <NavLink href="/contact" label="Contact" path={path} />
       </ul>
-      <div className="flex flex-row gap-4">
-        {/* Show Signin and Signup buttons only if user is not signed in */}
+
+      {/* User Actions and Mobile Menu */}
+      <div className="flex items-center gap-4">
+        {/* Show "Get Started" button if user is not signed in */}
         {!isSignedIn && (
-          <>
-            <Link href={"/dashboard"}>
-              <Button className="transition-all cursor-pointer">Get Started</Button>
-            </Link>
-          </>
+          <Link href="/dashboard">
+            <Button className="transition-all cursor-pointer">Get Started</Button>
+          </Link>
         )}
-        {/* Show UserButton if the user is logged in */}
+
+        {/* User Button */}
         {isSignedIn && <UserButton />}
+
+        {/* Mobile Menu Button */}
+        <button
+          className="md:hidden flex items-center focus:outline-none"
+          onClick={() => setIsMobileMenuOpen((prev) => !prev)} // Toggle mobile menu
+        >
+          {isMobileMenuOpen ? (
+            <X className="w-6 h-6" /> // Close icon
+          ) : (
+            <Menu className="w-6 h-6" /> // Hamburger icon
+          )}
+        </button>
       </div>
-    </div>
+
+      {/* Mobile Navigation Menu */}
+      {isMobileMenuOpen && (
+        <ul className="absolute top-16 left-0 w-full bg-cyan-200 shadow-md flex flex-col items-center gap-4 py-4 z-50 md:hidden">
+          <NavLink
+            href="/dashboard"
+            label="Dashboard"
+            path={path}
+            onClick={() => setIsMobileMenuOpen(false)} // Close menu after clicking
+          />
+          <NavLink
+            href="/features"
+            label="Features"
+            path={path}
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <NavLink
+            href="/pricing"
+            label="Pricing"
+            path={path}
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <NavLink
+            href="/howitworks"
+            label="How it Works?"
+            path={path}
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <NavLink
+            href="/contact"
+            label="Contact"
+            path={path}
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        </ul>
+      )}
+    </header>
+  );
+};
+
+// Reusable NavLink Component
+const NavLink = ({ href, label, path, onClick }) => {
+  return (
+    <li
+      onClick={onClick}
+      className={`hover:text-blue-600 hover:font-bold transition-all cursor-pointer ${
+        path === href ? "text-blue-600 font-bold" : ""
+      }`}
+    >
+      <Link href={href}>{label}</Link>
+    </li>
   );
 };
 

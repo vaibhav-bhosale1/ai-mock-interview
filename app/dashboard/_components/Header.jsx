@@ -89,10 +89,7 @@ const Header = () => {
         {!isSignedIn && (
           <>
             <Link href={"/dashboard"}>
-              <Button className="transition-all cursor-pointer">Signin</Button>
-            </Link>
-            <Link href={"/dashboard"}>
-              <Button className="transition-all cursor-pointer">Signup</Button>
+              <Button className="transition-all cursor-pointer">Get Started</Button>
             </Link>
           </>
         )}

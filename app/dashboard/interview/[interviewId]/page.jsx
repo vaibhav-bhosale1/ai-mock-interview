@@ -38,11 +38,11 @@ const Interview = ({ params }) => {
     }
     
   return (
-    <div className='my-10 flex-col min-h-max'>
+    <div className='my-10 flex-col h-auto min-h-screen w-full overflow-hidden box-border'>
         <h2 className='font-bold text-2xl text-cyan-300'>
             Let's Get Started
         </h2>
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-10'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-10 '>
             
                 <div className='flex flex-col my-5 gap-3 w-auto'>
                     <div className='flex flex-col p-5 rounded-lg border gap-5'>

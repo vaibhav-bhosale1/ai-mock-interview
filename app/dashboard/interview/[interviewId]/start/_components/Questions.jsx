@@ -17,14 +17,15 @@ function Question({ mockInterviewQuestion, activequestionindex }) {
         <>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {mockInterviewQuestion.map((question, index) => (
-              <h2
-                key={index} // Add key here
-                className={`font-semibold p-2 bg-secondary rounded-full text-xs md:text-sm text-center cursor-pointer ${
-                  activequestionindex === index
-                    ? "text-white-300 bg-blue-500"
-                    : ""
-                }`}
-              >
+             <h2
+             key={index}
+             className={`font-semibold p-2 rounded-full text-xs md:text-sm text-center cursor-pointer ${
+               activequestionindex === index
+                 ? "text-white bg-blue-500"
+                 : "bg-secondary text-gray-700"
+             }`}
+           >
+           
                 Question #{index + 1}
               </h2>
             ))}

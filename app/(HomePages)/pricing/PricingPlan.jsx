@@ -3,31 +3,30 @@ import React, { useState } from "react";
 import Script from "next/script";
 import { Button } from "../../../components/ui/button";
 
-import ScrollAnimation from "react-animate-on-scroll";
-import "animate.css/animate.compat.css";
-
 const PricingPlan = ({ title, price, features, isPremium, onUpgrade }) => (
- 
-    <div className={`p-6 rounded-lg shadow-lg m-4 max-w-md ${isPremium ? "bg-purple-700 text-white" : "bg-gray-800 text-gray-300"}`}>
-      <h3 className="text-xl font-bold mb-4">{title}</h3>
-      <p className="text-2xl font-bold mb-4">₹{price}/month</p>
-      <ul className="mb-6">
-        {features.map((feature, index) => (
-          <li key={index} className="mb-2">
-            ✔ {feature}
-          </li>
-        ))}
-      </ul>
-      {isPremium && (
-        <Button
-          className="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded"
-          onClick={onUpgrade}
-        >
-          Upgrade Now
-        </Button>
-      )}
-    </div>
-
+  <div
+    className={`p-6 rounded-lg shadow-lg m-4 max-w-md ${
+      isPremium ? "bg-purple-700 text-white" : "bg-gray-800 text-gray-300"
+    }`}
+  >
+    <h3 className="text-xl font-bold mb-4">{title}</h3>
+    <p className="text-2xl font-bold mb-4">₹{price}/month</p>
+    <ul className="mb-6">
+      {features.map((feature, index) => (
+        <li key={index} className="mb-2">
+          ✔ {feature}
+        </li>
+      ))}
+    </ul>
+    {isPremium && (
+      <Button
+        className="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded"
+        onClick={onUpgrade}
+      >
+        Upgrade Now
+      </Button>
+    )}
+  </div>
 );
 
 const Pricing = () => {
@@ -51,6 +50,7 @@ const Pricing = () => {
       });
 
       const data = await response.json();
+      console.log("Payment Data:", data);
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -71,6 +71,7 @@ const Pricing = () => {
           color: "#3399cc",
         },
       };
+
       const rzpl = new window.Razorpay(options);
       rzpl.open();
     } catch (error) {
@@ -82,7 +83,6 @@ const Pricing = () => {
 
   return (
     <div className="dark bg-black mb-52 text-gray-100 mt-20">
-      
       <Script
         src="https://checkout.razorpay.com/v1/checkout.js"
         onLoad={() => setRazorpayLoaded(true)}
@@ -94,10 +94,7 @@ const Pricing = () => {
           <PricingPlan
             title="Basic"
             price={0}
-            features={[
-              "Access to free content",
-              "Basic support",
-            ]}
+            features={["Access to free content", "Basic support"]}
             isPremium={false}
           />
           <PricingPlan
@@ -124,7 +121,6 @@ const Pricing = () => {
           />
         </div>
       </div>
-   
     </div>
   );
 };

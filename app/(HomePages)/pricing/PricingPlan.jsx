@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Script from "next/script";
 import { Button } from "../../../components/ui/button";
 import { LoaderCircle } from "lucide-react";
@@ -35,10 +35,11 @@ const Pricing = () => {
   const [processing, setProcessing] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // New state to track loading status
+
   const handlePayment = async (amount) => {
     if (!razorpayLoaded) {
-        console.error("Razorpay script not loaded yet.");
-        return;
+      console.error("Razorpay script not loaded yet.");
+      return;
     }
 
     setIsLoading(true);
@@ -47,53 +48,67 @@ const Pricing = () => {
     console.log("Amount passed to backend:", amount);  // Log the amount being passed
 
     try {
-        const response = await fetch("/api/payments", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ amount }), // Send the selected price
-        });
+      const response = await fetch("/api/payments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ amount }), // Send the selected price
+      });
 
-        const data = await response.json();
-        console.log("Payment Data:", data);
+      const data = await response.json();
+      console.log("Payment Data:", data);
 
-        const options = {
-            key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-            amount: data.amount, // amount in paise received from the backend
-            currency: "INR",
-            name: "VirtueHire",
-            description: "Test Payment",
-            order_id: data.orderId,
-            handler: function () {
-                window.location.href = "/thankyou"; // Redirect after success
-            },
-            prefill: {
-                name: "Vaibhav Bhosale",
-                email: "heytherevaibhav@virtuehirex",
-            },
-            theme: {
-                color: "#3399cc",
-            },
-        };
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: data.amount, // amount in paise received from the backend
+        currency: "INR",
+        name: "VirtueHire",
+        description: "Test Payment",
+        order_id: data.orderId,
+        handler: function () {
+          window.location.href = "/thankyou"; // Redirect after success
+        },
+        prefill: {
+          name: "Vaibhav Bhosale",
+          email: "heytherevaibhav@virtuehirex",
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
 
-        const rzpl = new window.Razorpay(options);
-        rzpl.open();
+      const rzpl = new window.Razorpay(options);
+      rzpl.open();
     } catch (error) {
-        console.error("Payment failed", error);
+      console.error("Payment failed", error);
     } finally {
-        setIsLoading(false);
-        setProcessing(false);
+      setIsLoading(false);
+      setProcessing(false);
     }
-};
+  };
+
+  useEffect(() => {
+    const loadRazorpayScript = () => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      script.defer = true;
+      script.onload = () => setRazorpayLoaded(true);
+      script.onerror = () => {
+        console.error("Failed to load Razorpay script.");
+        setIsLoading(false); // Handle script load failure
+      };
+      document.body.appendChild(script);
+    };
+
+    if (!razorpayLoaded) {
+      loadRazorpayScript();
+    }
+  }, [razorpayLoaded]);
 
   return (
     <div className="dark bg-black mb-52 text-gray-100 mt-20">
-      <Script
-        src="https://checkout.razorpay.com/v1/checkout.js"
-        onLoad={() => setRazorpayLoaded(true)}
-        onError={() => console.error("Failed to load Razorpay script.")}
-      />
       <div className="text-center">
         <h1 className="text-3xl font-bold">Choose Your Plan</h1>
 

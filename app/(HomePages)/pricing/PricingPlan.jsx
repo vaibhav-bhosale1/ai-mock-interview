@@ -52,7 +52,8 @@ const Pricing = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ amount }), // Send the selected price
+      body: JSON.stringify({ amount }),
+     
     });
 
     const data = await response.json();

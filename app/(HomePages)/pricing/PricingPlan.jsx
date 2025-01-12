@@ -2,8 +2,7 @@
 import React, { useState } from "react";
 import Script from "next/script";
 import { Button } from "../../../components/ui/button";
-import ThankYouPage from "../thankyou/page"
-import Footer from "../Footer";
+
 import ScrollAnimation from "react-animate-on-scroll";
 import "animate.css/animate.compat.css";
 

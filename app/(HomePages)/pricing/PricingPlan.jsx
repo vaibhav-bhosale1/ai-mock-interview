@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+"use client";
+import React, { useState, useEffect } from "react";
 import Script from "next/script";
 import { Button } from "../../../components/ui/button";
 import { LoaderCircle } from "lucide-react";
+import Head from "next/head";
 
 const PricingPlan = ({ title, price, features, isPremium, onUpgrade }) => (
   <div
@@ -30,21 +32,37 @@ const PricingPlan = ({ title, price, features, isPremium, onUpgrade }) => (
 );
 
 const Pricing = () => {
-  const [processing, setProcessing] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // New state to track loading status
-  const [scriptLoading, setScriptLoading] = useState(true); // Track if the Razorpay script is loading
+  const [isLoading, setIsLoading] = useState(false);
+  const [scriptLoading, setScriptLoading] = useState(true);
 
-  const handlePayment = async (amount) => {
+  // Preload Razorpay script on page load
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => {
+      setRazorpayLoaded(true);
+      setScriptLoading(false); // Once loaded, stop showing the loader
+    };
+    script.onerror = () => {
+      console.error("Failed to load Razorpay script.");
+      setScriptLoading(false); // Stop loader even if script fails
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script); // Cleanup on unmount
+    };
+  }, []);
+
+  const handlePayment = async (amount, planTitle) => {
     if (!razorpayLoaded) {
       console.error("Razorpay script not loaded yet.");
       return;
     }
 
     setIsLoading(true);
-    setProcessing(true);
 
-    console.log("Amount passed to backend:", amount); // Log the amount being passed
     try {
       const response = await fetch("/api/payments", {
         method: "POST",
@@ -54,18 +72,15 @@ const Pricing = () => {
         body: JSON.stringify({ amount }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("API error:", errorData);
-        throw new Error(errorData.error || "Failed to create Razorpay order");
-      }
-
       const data = await response.json();
-      console.log("Payment Data:", data);
-
       if (!data?.orderId || !data?.amount) {
         throw new Error("Invalid payment data received.");
       }
+
+      // Store planTitle in localStorage to make sure it's available on the thank you page
+      localStorage.setItem("paymentPlan", planTitle);
+      localStorage.setItem("orderId", data.orderId);
+      localStorage.setItem("price", data.amount);
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -75,6 +90,7 @@ const Pricing = () => {
         description: "Test Payment",
         order_id: data.orderId,
         handler: function () {
+          // Redirect to the thank you page after payment
           window.location.href = "/thankyou";
         },
         prefill: {
@@ -92,30 +108,25 @@ const Pricing = () => {
       console.error("Payment failed", error);
     } finally {
       setIsLoading(false);
-      setProcessing(false);
     }
   };
 
   return (
     <div className="dark bg-black mb-52 text-gray-100 mt-20">
-      <Script
-        src="https://checkout.razorpay.com/v1/checkout.js"
-        onLoad={() => {
-          setRazorpayLoaded(true);
-          setScriptLoading(false); // Set the loading state to false once the script is loaded
-        }}
-        onError={() => console.error("Failed to load Razorpay script.")}
-      />
+      {/* Preload Razorpay script */}
+      <Head>
+        <link rel="preload" href="https://checkout.razorpay.com/v1/checkout.js" as="script" />
+      </Head>
 
-      <div className="text-center">
-        <h1 className="text-3xl font-bold">Choose Your Plan</h1>
-
-        {/* Show loader if Razorpay script is still loading */}
-        {scriptLoading ? (
-          <div className="flex justify-center items-center h-40">
-            <LoaderCircle className="h-20 w-20 animate-spin" />
-          </div>
-        ) : (
+      {/* Display loader while script is loading */}
+      {scriptLoading ? (
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="text-white text-lg mb-4">Please wait, loading payment options...</div>
+          <LoaderCircle className="h-20 w-20 animate-spin" />
+        </div>
+      ) : (
+        <div className="text-center">
+          <h1 className="text-3xl font-bold">Choose Your Plan</h1>
           <div className="flex flex-row flex-wrap justify-center">
             <PricingPlan
               title="Basic"
@@ -126,28 +137,20 @@ const Pricing = () => {
             <PricingPlan
               title="Premium"
               price={499}
-              features={[
-                "Access to premium content",
-                "Priority support",
-                "AI-powered tools",
-              ]}
+              features={["Access to premium content", "Priority support", "AI-powered tools"]}
               isPremium={true}
-              onUpgrade={() => handlePayment(499)} // Pass price here
+              onUpgrade={() => handlePayment(499, "Premium")}
             />
             <PricingPlan
               title="Pro"
               price={999}
-              features={[
-                "Everything in Premium",
-                "Advanced analytics",
-                "One-on-one mentorship",
-              ]}
+              features={["Everything in Premium", "Advanced analytics", "One-on-one mentorship"]}
               isPremium={true}
-              onUpgrade={() => handlePayment(999)} // Pass price here
+              onUpgrade={() => handlePayment(999, "Pro")}
             />
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

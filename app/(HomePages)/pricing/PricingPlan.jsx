@@ -113,7 +113,7 @@ const Pricing = () => {
         {/* Show loader if Razorpay script is still loading */}
         {scriptLoading ? (
           <div className="flex justify-center items-center h-40">
-            <LoaderCircle className="h-20 w-20" />
+            <LoaderCircle className="h-20 w-20 animate-spin" />
           </div>
         ) : (
           <div className="flex flex-row flex-wrap justify-center">

@@ -45,7 +45,6 @@ const Pricing = () => {
   setProcessing(true);
 
   console.log("Amount passed to backend:", amount);  // Log the amount being passed
-
   try {
     const response = await fetch("/api/payments", {
       method: "POST",
@@ -53,25 +52,30 @@ const Pricing = () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ amount }),
-     
     });
-
+  
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("API error:", errorData);
+      throw new Error(errorData.error || "Failed to create Razorpay order");
+    }
+  
     const data = await response.json();
     console.log("Payment Data:", data);
-
+  
     if (!data?.orderId || !data?.amount) {
       throw new Error("Invalid payment data received.");
     }
-
+  
     const options = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      amount: data.amount, // amount in paise
+      amount: data.amount,
       currency: "INR",
       name: "VirtueHire",
       description: "Test Payment",
-      order_id: data.orderId, // Ensure this is correctly populated
+      order_id: data.orderId,
       handler: function () {
-        window.location.href = "/thankyou"; // Redirect after success
+        window.location.href = "/thankyou";
       },
       prefill: {
         name: "Vaibhav Bhosale",
@@ -81,12 +85,13 @@ const Pricing = () => {
         color: "#3399cc",
       },
     };
-
+  
     const rzpl = new window.Razorpay(options);
     rzpl.open();
   } catch (error) {
     console.error("Payment failed", error);
-  } finally {
+  }
+  finally {
     setIsLoading(false);
     setProcessing(false);
   }

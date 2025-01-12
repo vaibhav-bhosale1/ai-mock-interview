@@ -28,7 +28,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "app/(HomePages)/pricing/PricingPlan.jsx"  ],
   "exclude": [
     "node_modules"
   ]

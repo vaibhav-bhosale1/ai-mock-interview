@@ -5,6 +5,7 @@ import Hero from './(HomePages)/Hero'
 import Howitworks from './(HomePages)/howitworks/page'
 import Features from './(HomePages)/features/page'
 import Footer from './(HomePages)/Footer'
+import Pricing from './(HomePages)/pricing/page'
 const Home = () => {
   
   return (
@@ -15,6 +16,7 @@ const Home = () => {
     <div>
       <Hero />
       <Howitworks />
+      <Pricing/>
       <Features/>
       <Footer/>
       </div>

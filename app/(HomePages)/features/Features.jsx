@@ -6,7 +6,7 @@ const Featurepage = () => {
   return (
     <div className="bg-black text-white">
     
-      <section className="py-10 px-5 bg-gradient-to-r text-center">
+      <section className=" px-5 bg-gradient-to-r text-center">
         <div className="container mx-auto px-6">
           <h2 className="text-4xl font-bold mb-6">Ready to Get Started?</h2>
           <p className="text-lg mb-12">
@@ -68,10 +68,6 @@ const Featurepage = () => {
             </div>
       </section>
 
-      {/* Why Choose Us Section */}
-     
-
-      {/* Call-to-Action Section */}
     
     </div>
   );

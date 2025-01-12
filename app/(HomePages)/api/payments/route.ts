@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
 
 const razorpay = new Razorpay({
@@ -7,16 +7,33 @@ const razorpay = new Razorpay({
 });
 
 export async function POST(request) {
+    let body;
     try {
-        const { amount } = await request.json(); // Fetch amount from the request body
+        // Attempt to parse the request body
+        body = await request.json();
+    } catch (error) {
+        console.error("Failed to parse JSON body:", error);
+        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    try {
+        const { amount } = body;
+
+        // Validate amount
+        if (!amount || isNaN(amount) || amount <= 0) {
+            return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+        }
+
+        // Create Razorpay order
         const order = await razorpay.orders.create({
             amount: amount * 100, // Convert to smallest currency unit
             currency: "INR",
             receipt: "receipt_" + Math.random().toString(36).substring(7),
         });
+
         return NextResponse.json({ orderId: order.id, amount: order.amount }, { status: 200 });
     } catch (error) {
-        console.error("Error creating order", error);
+        console.error("Error creating Razorpay order:", error.message);
         return NextResponse.json({ error: "Error creating order" }, { status: 500 });
     }
 }

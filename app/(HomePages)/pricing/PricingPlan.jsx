@@ -42,7 +42,7 @@ const Pricing = () => {
 
     setProcessing(true);
     try {
-      const response = await fetch("/api", {
+      const response = await fetch("/api/payments", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -60,7 +60,7 @@ const Pricing = () => {
         description: "Test Payment",
         order_id: data.orderId,
         handler: function () {
-          window.location.href = "/thank-you";
+          window.location.href = "/thankyou";
         },
         prefill: {
           name: "Vaibhav Bhosale",

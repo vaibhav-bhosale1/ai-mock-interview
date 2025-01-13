@@ -4,7 +4,7 @@ import ScrollAnimation from 'react-animate-on-scroll';
 
 const Featurepage = () => {
   return (
-    <div className="bg-black text-white">
+    <div className="bg-black text-white mt-8">
     
       <section className=" px-5 bg-gradient-to-r text-center">
         <div className="container mx-auto px-6">

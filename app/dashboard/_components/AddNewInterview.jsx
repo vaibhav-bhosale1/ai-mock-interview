@@ -41,15 +41,30 @@ const AddNewInterview = () => {
 
     try {
       const result = await chatSession.sendMessage(Inputprompt);
-      const MockJsonResp = result.response
-        .text()
-        .replace("```json", "")
-        .replace("```", "");
-      console.log(JSON.parse(MockJsonResp));
-      setjsonresp(MockJsonResp);
+      
+      // Clean and sanitize the response
+      let MockJsonResp = await result.response.text();
+      MockJsonResp = MockJsonResp.replace("```json", "").replace("```", "").trim();
+      
+      // Optionally, remove trailing commas if present (in case the API response is malformed)
+      MockJsonResp = MockJsonResp.replace(/,\s*$/, "");
 
-      let resp = null; // Declare `resp` outside the block
-      if (MockJsonResp) {
+      console.log("Cleaned Mock JSON Response:", MockJsonResp);
+
+      // Try parsing the cleaned response
+      let parsedResponse = null;
+      try {
+        parsedResponse = JSON.parse(MockJsonResp);
+        setjsonresp(parsedResponse); // Set the parsed response to the state
+      } catch (parseError) {
+        console.error("Failed to parse JSON:", parseError);
+        setloading(false);
+        return;
+      }
+
+      // Insert into the database
+      let resp = null;
+      if (parsedResponse) {
         resp = await db
           .insert(MockInterview)
           .values({
@@ -65,7 +80,7 @@ const AddNewInterview = () => {
 
         console.log("Inserted ID", resp);
       } else {
-        console.log("Error: No response generated");
+        console.log("Error: No valid response generated");
       }
 
       setloading(false);

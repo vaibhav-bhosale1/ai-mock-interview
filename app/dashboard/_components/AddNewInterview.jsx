@@ -9,13 +9,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "../../../components/ui/dialog";
-
 import { Button } from "../../../components/ui/button";
 import { Textarea } from "../../../components/ui/textarea";
 import { Input } from "../../../components/ui/input";
-import { ChatSession } from "@google/generative-ai";
 import { LoaderPinwheel } from "lucide-react";
 import { MockInterview } from "../../../utils/schema";
 import { useUser } from "@clerk/nextjs";
@@ -28,70 +25,75 @@ const AddNewInterview = () => {
   const [jobdesc, setjobdesc] = useState("");
   const [jobexp, setjobexp] = useState("");
   const [loading, setloading] = useState(false);
-  const [jsonresp, setjsonresp] = useState([]);
+  const [error, setError] = useState("");
   const router = useRouter();
   const { user } = useUser();
 
   const onSubmit = async (event) => {
     setloading(true);
     event.preventDefault();
-    console.log(jobposition, jobdesc, jobexp);
-
-    const Inputprompt = `Job position: ${jobposition}, Job description: ${jobdesc}, Years of experience: ${jobexp}, Depends on this info give me ${process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT} interview questions and answers which will train me quite good for interview in JSON format`;
-
+    
+    const Inputprompt = `Generate a technical interview for the following position:
+    - Job Position: ${jobposition}
+    - Job Description: ${jobdesc}
+    - Years of Experience Required: ${jobexp}
+    
+    Please provide exactly ${process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT || 5} interview questions with detailed answers in this exact JSON format:
+    {
+      "interview_questions": [
+        {
+          "question_number": 1,
+          "question": "The technical question text",
+          "answer": "The detailed answer text"
+        }
+      ]
+    }
+    
+    The response must be valid JSON only, with no additional text or formatting.`;
+  
     try {
       const result = await chatSession.sendMessage(Inputprompt);
-      
-      // Clean and sanitize the response
       let MockJsonResp = await result.response.text();
-      MockJsonResp = MockJsonResp.replace("```json", "").replace("```", "").trim();
       
-      // Optionally, remove trailing commas if present (in case the API response is malformed)
-      MockJsonResp = MockJsonResp.replace(/,\s*$/, "");
-
-      console.log("Cleaned Mock JSON Response:", MockJsonResp);
-
-      // Try parsing the cleaned response
-      let parsedResponse = null;
-      try {
-        parsedResponse = JSON.parse(MockJsonResp);
-        setjsonresp(parsedResponse); // Set the parsed response to the state
-      } catch (parseError) {
-        console.error("Failed to parse JSON:", parseError);
-        setloading(false);
-        return;
+      // Clean the response
+      MockJsonResp = MockJsonResp.replace(/```json\n?/g, "")
+                                .replace(/```\n?/g, "")
+                                .trim();
+      
+      console.log("Raw JSON string:", MockJsonResp);
+      
+      // Parse and validate
+      const parsedResponse = JSON.parse(MockJsonResp);
+      
+      if (!parsedResponse.interview_questions || !Array.isArray(parsedResponse.interview_questions)) {
+        throw new Error("Invalid response format from AI");
       }
-
-      // Insert into the database
-      let resp = null;
-      if (parsedResponse) {
-        resp = await db
-          .insert(MockInterview)
-          .values({
-            mockId: uuidv4(),
-            jsonMockResp: MockJsonResp,
-            jobPosition: jobposition,
-            jobDesc: jobdesc,
-            jobExperience: jobexp,
-            createdBy: user?.primaryEmailAddress.emailAddress,
-            createdAt: moment().format("DD-MM-yyyy"),
-          })
-          .returning({ mockId: MockInterview.mockId });
-
-        console.log("Inserted ID", resp);
-      } else {
-        console.log("Error: No valid response generated");
-      }
-
+  
+      // Store in database
+      const resp = await db
+        .insert(MockInterview)
+        .values({
+          mockId: uuidv4(),
+          jsonMockResp: MockJsonResp,
+          jobPosition: jobposition,
+          jobDesc: jobdesc,
+          jobExperience: jobexp,
+          createdBy: user?.primaryEmailAddress?.emailAddress,
+          createdAt: moment().format("DD-MM-yyyy"),
+        })
+        .returning({ mockId: MockInterview.mockId });
+  
       setloading(false);
-
-      if (resp) {
-        setopendialog(false);
-        router.push("/dashboard/interview/" + resp[0]?.mockId);
+      setopendialog(false);
+      
+      if (resp && resp[0]?.mockId) {
+        router.push("/dashboard/interview/" + resp[0].mockId);
       }
+  
     } catch (error) {
-      console.error("An error occurred:", error);
-      setloading(false); // Ensure spinner stops on error
+      console.error("Error:", error);
+      setloading(false);
+      alert("Failed to create interview. Please try again.");
     }
   };
 
@@ -105,7 +107,6 @@ const AddNewInterview = () => {
           <h2>+Add New</h2>
         </div>
       </div>
-      {/* Dialog */}
       <Dialog open={opendialog} onOpenChange={setopendialog}>
         <DialogContent className="max-w-xl">
           <DialogHeader>
@@ -114,6 +115,11 @@ const AddNewInterview = () => {
             </DialogTitle>
             <DialogDescription>
               <form onSubmit={onSubmit}>
+                {error && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                    {error}
+                  </div>
+                )}
                 <div>
                   <h2>
                     Add Details about your job position/role, Job description
@@ -157,8 +163,8 @@ const AddNewInterview = () => {
                   <Button type="submit" disabled={loading}>
                     {loading ? (
                       <>
-                        <LoaderPinwheel className="animate-spin" />
-                        Generating from AI
+                        <LoaderPinwheel className="animate-spin mr-2" />
+                        Generating from AI...
                       </>
                     ) : (
                       "Start Interview"

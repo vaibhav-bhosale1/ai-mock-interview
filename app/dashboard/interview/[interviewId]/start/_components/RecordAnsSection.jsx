@@ -67,7 +67,7 @@ const Updateuseransdb = async () => {
       mockInterviewQuestion[activequestionindex]?.question +
       ', User Answer: ' +
       userans +
-      ', Depends on question and user answer for given interview question' +
+      ', Depends on question and user answer for given interview question also consider i am taking user input through microphone so give questions accordingly' +
       'please give us rating rating for answer and feedback as area of improvement if any' +
       'in just 5-6 lines to improve and topics that needs to be studied highlight it in JSON format with rating field and feedback field';
 

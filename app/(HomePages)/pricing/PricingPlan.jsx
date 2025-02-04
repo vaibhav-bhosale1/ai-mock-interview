@@ -1,57 +1,88 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Script from "next/script";
 import { Button } from "../../../components/ui/button";
 import { LoaderCircle } from "lucide-react";
 import Head from "next/head";
+import { motion } from "framer-motion";
 
-const PricingPlan = ({ title, price, features, isPremium, onUpgrade }) => (
-  <div
-    className={`p-6 rounded-lg shadow-lg m-4 max-w-md ${
-      isPremium ? "bg-purple-700 text-white" : "bg-gray-800 text-gray-300"
-    }`}
-  >
-    <h3 className="text-xl font-bold mb-4">{title}</h3>
-    <p className="text-2xl font-bold mb-4">₹{price}/month</p>
-    <ul className="mb-6">
-      {features.map((feature, index) => (
-        <li key={index} className="mb-2">
-          ✔ {feature}
-        </li>
-      ))}
-    </ul>
-    {isPremium && (
-      <Button
-        className="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded"
-        onClick={onUpgrade}
-      >
-        Upgrade Now
-      </Button>
-    )}
-  </div>
-);
+// Pricing Plan Component
+const PricingPlan = ({ title, price, features, isPremium, onUpgrade }) => {
+  return (
+    <motion.div
+      className={`relative p-8 rounded-3xl transition-all transform ${
+        isPremium
+          ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white"
+          : "bg-gradient-to-r from-gray-800 to-gray-700 text-gray-300"
+      } backdrop-blur-xl shadow-neumorph flex flex-col justify-between m-6 space-y-6 hover:scale-105 hover:shadow-xl hover:shadow-lg`}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <h3 className="text-3xl font-semibold mb-4">{title}</h3>
+      <p className="text-4xl font-bold mb-6">₹{price}/month</p>
+
+      <ul className="space-y-2 mb-6">
+        {features.map((feature, index) => (
+          <li key={index} className="flex items-center text-sm space-x-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 text-green-400"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fillRule="evenodd"
+                d="M16.293 5.293a1 1 0 011.414 1.414L9 14.414l-4-4a1 1 0 011.414-1.414L9 11.586l7.293-7.293z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <span>{feature}</span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-auto">
+        {isPremium ? (
+          <Button
+            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg shadow-xl focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50"
+            onClick={onUpgrade}
+          >
+            Upgrade Now
+          </Button>
+        ) : (
+          <Button
+            className="px-6 py-3 bg-green-500 hover:bg-green-600 rounded-lg shadow-xl focus:ring-4 focus:ring-green-500 focus:ring-opacity-50"
+          >
+            Get Started
+          </Button>
+        )}
+      </div>
+    </motion.div>
+  );
+};
 
 const Pricing = () => {
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [scriptLoading, setScriptLoading] = useState(true);
+  const [showPopup, setShowPopup] = useState(false); // For showing the loading popup
 
-  // Preload Razorpay script on page load
   useEffect(() => {
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.onload = () => {
       setRazorpayLoaded(true);
-      setScriptLoading(false); // Once loaded, stop showing the loader
+      setScriptLoading(false);
     };
     script.onerror = () => {
       console.error("Failed to load Razorpay script.");
-      setScriptLoading(false); // Stop loader even if script fails
+      setScriptLoading(false);
     };
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script); // Cleanup on unmount
+      document.body.removeChild(script);
     };
   }, []);
 
@@ -62,6 +93,7 @@ const Pricing = () => {
     }
 
     setIsLoading(true);
+    setShowPopup(true); // Show the popup when the user clicks on Upgrade
 
     try {
       const response = await fetch("/api/payments", {
@@ -77,7 +109,6 @@ const Pricing = () => {
         throw new Error("Invalid payment data received.");
       }
 
-      // Store planTitle in localStorage to make sure it's available on the thank you page
       localStorage.setItem("paymentPlan", planTitle);
       localStorage.setItem("orderId", data.orderId);
       localStorage.setItem("price", data.amount);
@@ -90,7 +121,6 @@ const Pricing = () => {
         description: "Test Payment",
         order_id: data.orderId,
         handler: function () {
-          // Redirect to the thank you page after payment
           window.location.href = "/thankyou";
         },
         prefill: {
@@ -108,17 +138,20 @@ const Pricing = () => {
       console.error("Payment failed", error);
     } finally {
       setIsLoading(false);
+      setShowPopup(false); // Hide the popup once Razorpay is loaded
     }
   };
 
   return (
     <div className="dark bg-black mb-50 text-gray-100 mt-20">
-      {/* Preload Razorpay script */}
       <Head>
-        <link rel="preload" href="https://checkout.razorpay.com/v1/checkout.js" as="script" />
+        <link
+          rel="preload"
+          href="https://checkout.razorpay.com/v1/checkout.js"
+          as="script"
+        />
       </Head>
 
-      {/* Display loader while script is loading */}
       {scriptLoading ? (
         <div className="flex justify-center items-center min-h-screen">
           <div className="text-white text-lg mb-4">Please wait, loading payment options...</div>
@@ -126,7 +159,7 @@ const Pricing = () => {
         </div>
       ) : (
         <div className="text-center">
-          <h1 className="text-3xl font-bold">Choose Your Plan</h1>
+          <h1 className="text-3xl font-bold mb-8">Choose Your Plan</h1>
           <div className="flex flex-row flex-wrap justify-center">
             <PricingPlan
               title="Basic"
@@ -137,17 +170,38 @@ const Pricing = () => {
             <PricingPlan
               title="Premium"
               price={499}
-              features={["Access to premium content", "Priority support", "AI-powered tools"]}
+              features={[
+                "Access to premium content",
+                "Priority support",
+                "AI-powered tools",
+              ]}
               isPremium={true}
               onUpgrade={() => handlePayment(499, "Premium")}
             />
             <PricingPlan
               title="Pro"
               price={999}
-              features={["Everything in Premium", "Advanced analytics", "One-on-one mentorship"]}
+              features={[
+                "Everything in Premium",
+                "Advanced analytics",
+                "One-on-one mentorship",
+              ]}
               isPremium={true}
               onUpgrade={() => handlePayment(999, "Pro")}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Enhanced Loading Popup */}
+      {showPopup && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-cyan-100 p-8 rounded-xl text-center shadow-xl max-w-xs w-full">
+            <div className="text-white text-xl mb-4">Getting you to your payment...</div>
+            <div className="flex justify-center">
+              <LoaderCircle className="h-16 w-16 text-white animate-spin" />
+            </div>
+            <p className="mt-4 text-white text-sm">Please wait while we prepare your payment page.</p>
           </div>
         </div>
       )}

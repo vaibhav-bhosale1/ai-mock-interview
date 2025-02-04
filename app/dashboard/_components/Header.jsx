@@ -2,33 +2,43 @@
 import { UserButton, useAuth } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import React, { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
 import { Button } from "../../../components/ui/button";
 import Link from "next/link";
 import { Menu, X } from "lucide-react"; // Mobile menu icons
 
 const Header = () => {
   const [mounted, setMounted] = useState(false);
-  const { theme, setTheme } = useTheme();
   const { isSignedIn } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Mobile menu state
-
+  const [scrolling, setScrolling] = useState(false); // To detect scroll
   const path = usePathname();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolling(window.scrollY > 10); // Set scrolling state when user scrolls
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   if (!mounted) return null;
 
   return (
-    <header className="flex justify-between items-center p-4 shadow-sm bg-cyan-100">
+    <header
+      className={`flex justify-between items-center p-4 text-white shadow-md bg-black bg-opacity-70 backdrop-blur-md sticky top-0 z-50 transition-all duration-300 ${
+        scrolling ? "bg-opacity-90" : "bg-opacity-70"
+      }`}
+    >
       {/* Logo */}
       <Link href="/">
-      <h1 className="text-xl font-bold">
-  VirtueHireX<sub className="text-sm font-normal"> by Vaibhav Bhosale</sub>
-</h1>
-
+        <h1 className="text-xl font-bold">
+          VirtueHireX<sub className="text-sm font-normal"> by Vaibhav Bhosale</sub>
+        </h1>
       </Link>
 
       {/* Desktop Navigation Links */}
@@ -40,17 +50,24 @@ const Header = () => {
         <NavLink href="/contact" label="Contact" path={path} />
       </ul>
 
-      {/* User Actions and Mobile Menu */}
-      <div className="flex items-center gap-4">
+      {/* User Actions and Mobile Menu */} 
+      <div className="flex items-center gap-4 ">
         {/* Show "Get Started" button if user is not signed in */}
         {!isSignedIn && (
           <Link href="/dashboard">
-            <Button className="transition-all cursor-pointer">Get Started</Button>
+            <Button className="transition-all cursor-pointer text-black bg-white hover:bg-gray-100">
+              Get Started
+            </Button>
           </Link>
         )}
 
         {/* User Button */}
-        {isSignedIn && <UserButton />}
+        {isSignedIn && (
+  <div className="  border-2 border-cyan-500 rounded-full">
+    <UserButton />
+  </div>
+)}
+
 
         {/* Mobile Menu Button */}
         <button
@@ -67,7 +84,7 @@ const Header = () => {
 
       {/* Mobile Navigation Menu */}
       {isMobileMenuOpen && (
-        <ul className="absolute top-16 left-0 w-full bg-cyan-200 shadow-md flex flex-col items-center gap-4 py-4 z-50 md:hidden">
+        <ul className="absolute top-16 left-0 w-full bg-[#1c1c1c] bg-opacity-90 backdrop-blur-md shadow-md flex flex-col items-center gap-4 py-4 z-50 md:hidden">
           <NavLink
             href="/dashboard"
             label="Dashboard"
@@ -109,11 +126,10 @@ const NavLink = ({ href, label, path, onClick }) => {
   return (
     <li
       onClick={onClick}
-      className={`hover:text-blue-600 hover:font-bold transition-all cursor-pointer ${
-        path === href ? "text-blue-600 font-bold" : ""
-      }`}
+      className={`relative cursor-pointer group hover:text-blue-400  transition-all`}
     >
       <Link href={href}>{label}</Link>
+      <div className="absolute left-0 right-0 bottom-0 w-full h-0.5 bg-gradient-to-r from-transparent to-blue-400 scale-x-0 group-hover:scale-x-100 transition-all duration-300"></div>
     </li>
   );
 };

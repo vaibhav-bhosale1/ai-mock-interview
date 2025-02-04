@@ -6,7 +6,7 @@ import Howitworks from "./(HomePages)/howitworks/page";
 import Features from "./(HomePages)/features/page";
 import Footer from "./(HomePages)/Footer";
 import Pricing from "./(HomePages)/pricing/page";
-import { hatch } from "ldrs";
+
 
 hatch.register();
 
@@ -32,7 +32,7 @@ const Home = () => {
             backgroundColor: "#f9f9f9", // Optional: loader background
           }}
         >
-          <l-hatch size="64" stroke="4" speed="3.5" color="black"></l-hatch>
+         Loading
         </div>
       ) : (
         <>

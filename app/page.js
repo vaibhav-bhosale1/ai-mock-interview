@@ -6,17 +6,13 @@ import Howitworks from "./(HomePages)/howitworks/page";
 import Features from "./(HomePages)/features/page";
 import Footer from "./(HomePages)/Footer";
 import Pricing from "./(HomePages)/pricing/page";
-
-
-hatch.register();
+import BackgroundPaths from "../components/ui/BckgroundPath"; // Import animated background
 
 const Home = () => {
   const [loading, setLoading] = useState(true); // State to handle loading
 
   useEffect(() => {
-    // Simulate loading duration
     const timer = setTimeout(() => setLoading(false), 2000); // Adjust timing as needed
-
     return () => clearTimeout(timer); // Clean up the timer
   }, []);
 
@@ -32,19 +28,19 @@ const Home = () => {
             backgroundColor: "#f9f9f9", // Optional: loader background
           }}
         >
-         Loading
+          Loading
         </div>
       ) : (
-        <>
-          <Header />
-          <div>
+        <div className="relative min-h-screen w-full overflow-hidden">
+         
+            <Header />
             <Hero />
             <Howitworks />
             <Pricing />
             <Features />
             <Footer />
           </div>
-        </>
+       
       )}
     </>
   );

@@ -22,10 +22,13 @@ const Header = () => {
   if (!mounted) return null;
 
   return (
-    <header className="flex justify-between items-center p-4 shadow-sm bg-cyan-200">
+    <header className="flex justify-between items-center p-4 shadow-sm bg-cyan-100">
       {/* Logo */}
       <Link href="/">
-        <h1 className="text-xl font-bold">VirtueHireX</h1>
+      <h1 className="text-xl font-bold">
+  VirtueHireX<sub className="text-sm font-normal"> by Vaibhav Bhosale</sub>
+</h1>
+
       </Link>
 
       {/* Desktop Navigation Links */}

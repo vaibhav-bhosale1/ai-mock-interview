@@ -112,7 +112,7 @@ const Pricing = () => {
   };
 
   return (
-    <div className="dark bg-black mb-52 text-gray-100 mt-20">
+    <div className="dark bg-black mb-50 text-gray-100 mt-20">
       {/* Preload Razorpay script */}
       <Head>
         <link rel="preload" href="https://checkout.razorpay.com/v1/checkout.js" as="script" />

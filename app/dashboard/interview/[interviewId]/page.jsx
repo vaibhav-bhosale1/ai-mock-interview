@@ -70,7 +70,7 @@ const Interview = ({ params }) => {
                     onUserMediaError={()=>setwebcam(false)}
                     mirrored={true}
                     className='my-10 h-80 w-full'/>
-                    <Button onClick={()=>setwebcam(false)} className='w-full' variant="ghost">Disable Web Cam and Microphone</Button>
+                    <Button onClick={()=>setwebcam(false)} className='w-full text-cyan-300 border border-cyan-100' variant="default">Disable Web Cam and Microphone</Button>
                     </>
                     :<>
                     <CameraIcon className='h-80 w-full my-7 p-20 bg-gray-100 rounded-lg border'/>

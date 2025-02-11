@@ -81,7 +81,7 @@ function StartInterview({ params }) {
           interviewData={interviewData}
         />
       </div>
-      <div className="flex justify-end gap-5">
+      <div className="flex justify-end gap-5 ">
         {activequestionindex > 0 && (
           <Button onClick={() => setactivequestionindex(activequestionindex - 1)}>
             Previous Question

@@ -69,6 +69,38 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
       }
 
       // Insert answer
+  
+      
+      // Generate feedback
+      const feedbackPrompt = `
+      You are an expert interviewer evaluating a candidate's response.
+      
+      Please assess the following question and answer:
+      
+      Question: "${currentQuestion.question}"
+      User Answer: "${answerText}"
+      
+      Provide a JSON response with:
+      
+      {
+        "rating": "An integer rating from 1-10 based on accuracy, completeness, and clarity. 
+                   Consider how well the answer addresses the specific question asked.",
+        "feedback": "2-3 sentences of constructive feedback. Be specific about what was done well 
+                     and areas for improvement. Focus only on the content related to concurrency and 
+                     Go channels. Ignore topics like error handling unless explicitly mentioned in the question."
+      }
+      
+      Ensure the feedback is specific, helpful, and professional.please dont asses very strictly
+      Do not introduce unrelated feedback topics such as error handling unless the question explicitly asks for them. 
+      Evaluate the correctness and efficiency of the explanation and code if provided.
+      `;
+      
+
+      const result = await chatSession.sendMessage(feedbackPrompt);
+      const responseText = await result.response.text();
+      const JsonFeedbackResp = parseFeedbackResponse(responseText);
+
+      // Update with feedback
       await db.insert(UserAnswer).values({
         mockIdRef: interviewData.mockId,
         question: currentQuestion.question,
@@ -76,29 +108,10 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
         userAns: answerText,
         userEmail: user.primaryEmailAddress.emailAddress,
         createdAt: moment().format('DD-MM-yyyy'),
+        feedback: JsonFeedbackResp.feedback, // Insert feedback directly
+        rating: JsonFeedbackResp.rating,     // Insert rating directly
       });
-
-      // Generate feedback
-      const feedbackPrompt = `Question: ${currentQuestion.question}
-        User Answer: ${answerText}
-        Please provide a JSON response with:
-        {
-          "rating": "1-10 rating",
-          "feedback": "2-3 sentences of constructive feedback"
-        }`;
-
-      const result = await chatSession.sendMessage(feedbackPrompt);
-      const responseText = await result.response.text();
-      const JsonFeedbackResp = parseFeedbackResponse(responseText);
-
-      // Update with feedback
-      await db
-        .update(UserAnswer)
-        .set({
-          feedback: JsonFeedbackResp.feedback,
-          rating: JsonFeedbackResp.rating,
-        })
-        .where(eq(UserAnswer.mockIdRef, interviewData.mockId));
+      
 
       notifysuccess();
       if (inputMethod === 'text') {
@@ -218,7 +231,7 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
             value={textAnswer}
             onChange={(e) => setTextAnswer(e.target.value)}
             placeholder="Type your answer here..."
-            className="w-full p-3 border rounded-lg min-h-[100px] mb-4"
+            className="w-full p-3 border rounded-lg min-h-[100px] mb-2"
             disabled={loading}
           />
           <Button 

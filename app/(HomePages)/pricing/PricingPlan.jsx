@@ -197,11 +197,11 @@ const Pricing = () => {
       {showPopup && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-cyan-100 p-8 rounded-xl text-center shadow-xl max-w-xs w-full">
-            <div className="text-white text-xl mb-4">Getting you to your payment...</div>
+            <div className="text-black text-xl mb-4">Getting you to your payment...</div>
             <div className="flex justify-center">
-              <LoaderCircle className="h-16 w-16 text-white animate-spin" />
+              <LoaderCircle className="h-16 w-16 text-black animate-spin" />
             </div>
-            <p className="mt-4 text-white text-sm">Please wait while we prepare your payment page.</p>
+            <p className="mt-4 text-black text-sm">Please wait while we prepare your payment page.</p>
           </div>
         </div>
       )}

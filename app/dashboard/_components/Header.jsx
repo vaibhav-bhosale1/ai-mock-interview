@@ -5,6 +5,8 @@ import React, { useState, useEffect } from "react";
 import { Button } from "../../../components/ui/button";
 import Link from "next/link";
 import { Menu, X } from "lucide-react"; // Mobile menu icons
+import { Image } from "@nextui-org/react";
+
 
 const Header = () => {
   const [mounted, setMounted] = useState(false);
@@ -36,6 +38,7 @@ const Header = () => {
     >
       {/* Logo */}
       <Link href="/">
+      
         <h1 className="text-xl font-bold">
           VirtueHireX<sub className="text-sm font-normal"></sub>
         </h1>
@@ -63,7 +66,7 @@ const Header = () => {
 
         {/* User Button */}
         {isSignedIn && (
-  <div className="  border-2 border-cyan-500 rounded-full">
+  <div className="  border-3 border-cyan-500 rounded-full ">
     <UserButton />
   </div>
 )}

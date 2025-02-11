@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import Webcam from 'react-webcam';
 import { Button } from '../../../../../../components/ui/button';
 import { Mic } from 'lucide-react';
@@ -13,88 +13,103 @@ import { ToastContainer, toast } from 'react-toastify';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 function RecordAnsSection({ mockInterviewQuestion, activequestionindex, interviewData }) {
-  const [userans, setuserans] = useState('');
   const [loading, setloading] = useState(false);
   const { user } = useUser();
+  const isSubmitting = useRef(false);
 
-  const notifysuccess = () => toast('Answer stored!');
-  const notifyfailed = () => toast('Failed to store answer. Please try again.');
+  const notifysuccess = () => toast.success('Answer stored!');
+  const notifyfailed = () => toast.error('Failed to store answer. Please try again.');
 
-  // Speech Recognition hooks
   const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } =
     useSpeechRecognition();
 
-  /** Handle Start/Stop Recording */
-  const StartStopRecording = useCallback(() => {
+  const parseFeedbackResponse = (response) => {
+    try {
+      const jsonStart = response.indexOf('{');
+      const jsonEnd = response.lastIndexOf('}') + 1;
+      if (jsonStart === -1 || jsonEnd === -1) {
+        throw new Error('No valid JSON found in response');
+      }
+      const jsonStr = response.slice(jsonStart, jsonEnd);
+      return JSON.parse(jsonStr);
+    } catch (error) {
+      console.error('Failed to parse feedback response:', error);
+      return {
+        rating: "N/A",
+        feedback: "Unable to generate feedback at this time."
+      };
+    }
+  };
+
+  const storeAnswer = async (transcriptText) => {
+    if (isSubmitting.current || !transcriptText || transcriptText.length <= 3) {
+      return;
+    }
+
+    isSubmitting.current = true;
+    setloading(true);
+
+    try {
+      const currentQuestion = mockInterviewQuestion[activequestionindex];
+      if (!currentQuestion || !interviewData?.mockId || !user?.primaryEmailAddress?.emailAddress) {
+        throw new Error('Required data missing');
+      }
+
+      // Insert answer
+      await db.insert(UserAnswer).values({
+        mockIdRef: interviewData.mockId,
+        question: currentQuestion.question,
+        correctAns: currentQuestion.answer,
+        userAns: transcriptText,
+        userEmail: user.primaryEmailAddress.emailAddress,
+        createdAt: moment().format('DD-MM-yyyy'),
+      });
+
+      // Generate feedback
+      const feedbackPrompt = `Question: ${currentQuestion.question}
+        User Answer: ${transcriptText}
+        Please provide a JSON response with:
+        {
+          "rating": "1-10 rating",
+          "feedback": "2-3 sentences of constructive feedback"
+        }`;
+
+      const result = await chatSession.sendMessage(feedbackPrompt);
+      const responseText = await result.response.text();
+      const JsonFeedbackResp = parseFeedbackResponse(responseText);
+
+      // Update with feedback
+      await db
+        .update(UserAnswer)
+        .set({
+          feedback: JsonFeedbackResp.feedback,
+          rating: JsonFeedbackResp.rating,
+        })
+        .where(eq(UserAnswer.mockIdRef, interviewData.mockId));
+
+      notifysuccess();
+    } catch (error) {
+      console.error('Failed to save answer:', error);
+      notifyfailed();
+    } finally {
+      setloading(false);
+      isSubmitting.current = false;
+    }
+  };
+
+  const handleRecordingToggle = useCallback(() => {
     if (listening) {
+      // Stop recording and store the answer
       SpeechRecognition.stopListening();
-      console.log('Recording stopped');
+      if (transcript) {
+        storeAnswer(transcript);
+      }
     } else {
+      // Start new recording
       resetTranscript();
       SpeechRecognition.startListening({ continuous: true });
-      console.log('Recording started');
     }
-  }, [listening, resetTranscript]);
-
-  /** Update DB after Recording */
-  useEffect(() => {
-    if (!listening && transcript?.length > 3) {
-      setuserans(transcript);
-      Updateuseransdb();
-    }
-  }, [listening, transcript]);
-
-  /** Update User Answer in DB */
- /** Update User Answer in DB */
-const Updateuseransdb = async () => {
-  setloading(true);
-  console.log('Saving user answer:', userans);
-
-  try {
-    await db.insert(UserAnswer).values({
-      mockIdRef: interviewData?.mockId,
-      question: mockInterviewQuestion[activequestionindex]?.question,
-      correctAns: mockInterviewQuestion[activequestionindex]?.answer,
-      userAns: userans,
-      userEmail: user?.primaryEmailAddress?.emailAddress,
-      createdAt: moment().format('DD-MM-yyyy'),
-    });
-
-    console.log('Answer successfully stored in the database:', userans); // Log the saved answer
-
-    const feedbackPrompt =
-      'Question:' +
-      mockInterviewQuestion[activequestionindex]?.question +
-      ', User Answer: ' +
-      userans +
-      ', Depends on question and user answer for given interview question also consider i am taking user input through microphone so give questions accordingly' +
-      'please give us rating rating for answer and feedback as area of improvement if any' +
-      'in just 5-6 lines to improve and topics that needs to be studied highlight it in JSON format with rating field and feedback field';
-
-    const result = await chatSession.sendMessage(feedbackPrompt);
-    const cleanedJson = (await result.response.text())
-      .replace('```json', '')
-      .replace('```', '');
-    const JsonFeedbackResp = JSON.parse(cleanedJson);
-
-    await db.update(UserAnswer).set({
-      feedback: JsonFeedbackResp?.feedback,
-      rating: JsonFeedbackResp?.rating,
-    }).where(eq(UserAnswer.mockIdRef, interviewData?.mockId));
-
-    console.log('Feedback and rating updated for the answer:', JsonFeedbackResp); // Log feedback and rating
-
-    notifysuccess();
-    setuserans('');
-  } catch (error) {
-    console.error('Failed to save answer:', error);
-    notifyfailed();
-    alert('Failed to save the answer. Check console for details.');
-  } finally {
-    setloading(false);
-  }
-};
-
+  }, [listening, transcript, resetTranscript]);
 
   if (!browserSupportsSpeechRecognition) {
     return (
@@ -106,10 +121,9 @@ const Updateuseransdb = async () => {
 
   return (
     <div className="flex justify-center items-center flex-col">
-      {/* Camera Section */}
       <div className="flex flex-col justify-center items-center bg-black rounded-lg p-5 mt-20 border border-cyan-200">
         <Image
-          src={'/webcam.png'}
+          src="/webcam.png"
           width={300}
           height={300}
           alt="webcam"
@@ -118,12 +132,11 @@ const Updateuseransdb = async () => {
         <Webcam mirrored={true} style={{ height: 300, width: '100%', zIndex: 10 }} />
       </div>
 
-      {/* Record Button */}
       <Button
         disabled={loading}
         variant="outline"
         className="my-10"
-        onClick={StartStopRecording}
+        onClick={handleRecordingToggle}
       >
         {listening ? (
           <h2 className="text-red-600 flex gap-2">
@@ -133,6 +146,13 @@ const Updateuseransdb = async () => {
           <h2>Record Answer</h2>
         )}
       </Button>
+
+      {transcript && !listening && (
+        <div className="text-sm text-gray-600 mb-4">
+          Last recorded answer: {transcript}
+        </div>
+      )}
+
       <ToastContainer
         position="top-center"
         autoClose={1110}

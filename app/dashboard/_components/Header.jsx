@@ -37,7 +37,7 @@ const Header = () => {
       {/* Logo */}
       <Link href="/">
         <h1 className="text-xl font-bold">
-          VirtueHireX<sub className="text-sm font-normal"> by Vaibhav Bhosale</sub>
+          VirtueHireX<sub className="text-sm font-normal"></sub>
         </h1>
       </Link>
 

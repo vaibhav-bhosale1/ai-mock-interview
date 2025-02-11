@@ -2,7 +2,7 @@ import Image from 'next/image';
 import React, { useState, useCallback, useRef } from 'react';
 import Webcam from 'react-webcam';
 import { Button } from '../../../../../../components/ui/button';
-import { Mic } from 'lucide-react';
+import { Mic, Type, Save } from 'lucide-react';
 import { chatSession } from '../../../../../../utils/GeminiAiModel';
 import { db } from '../../../../../../utils/db';
 import { useUser } from '@clerk/nextjs';
@@ -14,14 +14,26 @@ import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognitio
 
 function RecordAnsSection({ mockInterviewQuestion, activequestionindex, interviewData }) {
   const [loading, setloading] = useState(false);
+  const [inputMethod, setInputMethod] = useState('mic');
+  const [textAnswer, setTextAnswer] = useState('');
   const { user } = useUser();
   const isSubmitting = useRef(false);
+  const recordedAnswer = useRef('');
 
   const notifysuccess = () => toast.success('Answer stored!');
   const notifyfailed = () => toast.error('Failed to store answer. Please try again.');
 
-  const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } =
-    useSpeechRecognition();
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition
+  } = useSpeechRecognition({
+    continuous: true,
+    onResult: (result) => {
+      recordedAnswer.current = result;
+    }
+  });
 
   const parseFeedbackResponse = (response) => {
     try {
@@ -41,8 +53,9 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
     }
   };
 
-  const storeAnswer = async (transcriptText) => {
-    if (isSubmitting.current || !transcriptText || transcriptText.length <= 3) {
+  const storeAnswer = async (answerText) => {
+    if (isSubmitting.current || !answerText || answerText.length <= 3) {
+      notifyfailed();
       return;
     }
 
@@ -60,14 +73,14 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
         mockIdRef: interviewData.mockId,
         question: currentQuestion.question,
         correctAns: currentQuestion.answer,
-        userAns: transcriptText,
+        userAns: answerText,
         userEmail: user.primaryEmailAddress.emailAddress,
         createdAt: moment().format('DD-MM-yyyy'),
       });
 
       // Generate feedback
       const feedbackPrompt = `Question: ${currentQuestion.question}
-        User Answer: ${transcriptText}
+        User Answer: ${answerText}
         Please provide a JSON response with:
         {
           "rating": "1-10 rating",
@@ -88,6 +101,9 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
         .where(eq(UserAnswer.mockIdRef, interviewData.mockId));
 
       notifysuccess();
+      if (inputMethod === 'text') {
+        setTextAnswer('');
+      }
     } catch (error) {
       console.error('Failed to save answer:', error);
       notifyfailed();
@@ -102,26 +118,61 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
       // Stop recording and store the answer
       SpeechRecognition.stopListening();
       if (transcript) {
-        storeAnswer(transcript);
+        // Small delay to ensure we have the final transcript
+        setTimeout(() => {
+          storeAnswer(transcript);
+          resetTranscript();
+        }, 500);
       }
     } else {
       // Start new recording
       resetTranscript();
+      recordedAnswer.current = '';
       SpeechRecognition.startListening({ continuous: true });
     }
   }, [listening, transcript, resetTranscript]);
 
-  if (!browserSupportsSpeechRecognition) {
+  const handleTextSubmit = (e) => {
+    e.preventDefault();
+    if (textAnswer.trim()) {
+      storeAnswer(textAnswer.trim());
+    }
+  };
+
+  if (!browserSupportsSpeechRecognition && inputMethod === 'mic') {
+    setInputMethod('text');
     return (
-      <p className="text-red-500">
-        Browser does not support Speech Recognition. Please use Chrome or a supported browser.
+      <p className="text-red-500 mb-4">
+        Browser does not support Speech Recognition. Switching to text input mode.
       </p>
     );
   }
 
   return (
     <div className="flex justify-center items-center flex-col">
-      <div className="flex flex-col justify-center items-center bg-black rounded-lg p-5 mt-20 border border-cyan-200">
+      <div className="flex gap-2 mb-5">
+        <Button 
+          variant={inputMethod === 'mic' ? "outline" : "default"}
+          onClick={() => {
+            setInputMethod('mic');
+            resetTranscript();
+          }}
+          className="flex gap-2 items-center mt-5"
+        >
+          <Mic className="h-4 w-4" />
+          Voice Recording
+        </Button>
+        <Button 
+          variant={inputMethod === 'text' ? "outline" : "default"}
+          onClick={() => setInputMethod('text')}
+          className="flex gap-2 items-center mt-5 "
+        >
+          <Type className="h-4 w-4" />
+          Text Input
+        </Button>
+      </div>
+
+      <div className="flex flex-col justify-center items-center bg-black rounded-lg p-5 mt-18 border border-cyan-200">
         <Image
           src="/webcam.png"
           width={300}
@@ -132,25 +183,53 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
         <Webcam mirrored={true} style={{ height: 300, width: '100%', zIndex: 10 }} />
       </div>
 
-      <Button
-        disabled={loading}
-        variant="outline"
-        className="my-10"
-        onClick={handleRecordingToggle}
-      >
-        {listening ? (
-          <h2 className="text-red-600 flex gap-2">
-            <Mic /> Stop Recording
-          </h2>
-        ) : (
-          <h2>Record Answer</h2>
-        )}
-      </Button>
+      {inputMethod === 'mic' ? (
+        <div className="flex flex-col items-center w-full max-w-lg">
+          <Button
+            disabled={loading}
+            variant="outline"
+            className="my-10"
+            onClick={handleRecordingToggle}
+          >
+            {listening ? (
+              <h2 className="text-red-600 flex gap-2">
+                <Mic className="animate-pulse" /> Stop Recording
+              </h2>
+            ) : (
+              <h2>Record Answer</h2>
+            )}
+          </Button>
 
-      {transcript && !listening && (
-        <div className="text-sm text-gray-600 mb-4">
-          Last recorded answer: {transcript}
+          {listening && (
+            <div className="text-sm text-gray-600 mb-4">
+              Recording: {transcript}
+            </div>
+          )}
+
+          {!listening && transcript && (
+            <div className="text-sm text-gray-600 mb-4">
+              Last recorded answer: {transcript}
+            </div>
+          )}
         </div>
+      ) : (
+        <form onSubmit={handleTextSubmit} className="w-full max-w-lg mt-10">
+          <textarea
+            value={textAnswer}
+            onChange={(e) => setTextAnswer(e.target.value)}
+            placeholder="Type your answer here..."
+            className="w-full p-3 border rounded-lg min-h-[100px] mb-4"
+            disabled={loading}
+          />
+          <Button 
+            type="submit" 
+            disabled={loading || !textAnswer.trim()} 
+            className="w-full flex gap-2 items-center justify-center"
+          >
+            <Save className="h-4 w-4" />
+            Save Answer
+          </Button>
+        </form>
       )}
 
       <ToastContainer

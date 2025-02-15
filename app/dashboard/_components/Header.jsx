@@ -39,7 +39,7 @@ const Header = () => {
       {/* Logo */}
       <Link href="/">
       
-        <h1 className="text-xl font-bold">
+        <h1 className="text-2xl font-bold text-cyan-100">
           VirtueHireX<sub className="text-sm font-normal"></sub>
         </h1>
       </Link>

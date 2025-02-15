@@ -11,7 +11,7 @@ const PricingPlan = ({ title, price, features, isPremium, onUpgrade }) => {
     <motion.div
       className={`relative p-8 rounded-3xl transition-all transform ${
         isPremium
-          ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white"
+          ? "bg-gradient-to-r from-blue-500 to-violet-600 text-white"
           : "bg-gradient-to-r from-gray-800 to-gray-700 text-gray-300"
       } backdrop-blur-xl shadow-neumorph flex flex-col justify-between m-6 space-y-6 hover:scale-105 hover:shadow-xl hover:shadow-lg`}
       initial={{ opacity: 0, scale: 0.8 }}

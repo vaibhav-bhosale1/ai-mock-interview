@@ -18,12 +18,14 @@ import { MockInterview } from "../../../utils/schema";
 import { useUser } from "@clerk/nextjs";
 import moment from "moment";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const AddNewInterview = () => {
   const [opendialog, setopendialog] = useState(false);
   const [jobposition, setjobposition] = useState("");
   const [jobdesc, setjobdesc] = useState("");
   const [jobexp, setjobexp] = useState("");
+  const [numQuestions, setNumQuestions] = useState("");
   const [loading, setloading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -38,7 +40,8 @@ const AddNewInterview = () => {
     - Job Description: ${jobdesc}
     - Years of Experience Required: ${jobexp}
     
-    Please provide exactly ${process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT || 5} interview questions with detailed answers in this exact JSON format:
+    Please provide exactly ${numQuestions} interview questions if answer require to have code ask them to write code and with detailed answers in this exact JSON format:
+    
     {
       "interview_questions": [
         {
@@ -49,7 +52,8 @@ const AddNewInterview = () => {
       ]
     }
     
-    The response must be valid JSON only, with no additional text or formatting.`;
+    The response must be valid JSON only, properly formatted as plain text. Ensure that any code included is correctly formatted without extra markdown, symbols, or explanations. Do not include any additional text outside the JSON response.No additional text or formatted`;
+    
   
     try {
       const result = await chatSession.sendMessage(Inputprompt);
@@ -87,7 +91,8 @@ const AddNewInterview = () => {
       setopendialog(false);
       
       if (resp && resp[0]?.mockId) {
-        router.push("/dashboard/interview/" + resp[0].mockId);
+        router.push("/dashboard/interview/" + resp[0].mockId)
+        
       }
   
     } catch (error) {
@@ -151,6 +156,20 @@ const AddNewInterview = () => {
                       onChange={(event) => setjobexp(event.target.value)}
                     />
                   </div>
+
+                  <div className="my-3">
+                    <label>Number of Questions</label>
+                    <Input
+                      placeholder="5"
+                      type="number"
+                      min="1"
+                      max="20"
+                      required
+                      value={numQuestions}
+                      onChange={(event) => setNumQuestions(event.target.value)}
+                    />
+                  </div>
+
                 </div>
                 <div className="flex gap-5 justify-end">
                   <Button

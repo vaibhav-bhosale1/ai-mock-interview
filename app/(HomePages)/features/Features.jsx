@@ -4,7 +4,7 @@ import ScrollAnimation from 'react-animate-on-scroll';
 
 const Featurepage = () => {
   return (
-    <div className=" bg-black text-white mt-8">
+    <div className=" bg-black text-white mt-8 min-h-screen">
     
     
 
@@ -22,8 +22,8 @@ const Featurepage = () => {
                   animateOnce={true}>
                 
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="relative group p-6 bg-white rounded-lg shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+              <div className="flex flex-col  gap-8">
+                <div className="relative group p-6 bg-violet-100 rounded-lg shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                   <i className="fas fa-clock text-5xl text-blue-600 mb-4"></i>
                   <h3 className="text-xl font-semibold mb-4 text-gray-800 group-hover:text-blue-900 transition-colors duration-300">
@@ -33,7 +33,7 @@ const Featurepage = () => {
                     Practice under real interview conditions with timed sessions.
                   </p>
                 </div>
-                <div className="relative group p-6 bg-white rounded-lg shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                <div className="relative group p-6 bg-violet-200 rounded-lg shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300">
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                   <i className="fas fa-chart-line text-5xl text-purple-600 mb-4"></i>
                   <h3 className="text-xl font-semibold mb-4 text-gray-800 group-hover:text-purple-900 transition-colors duration-300">
@@ -43,7 +43,7 @@ const Featurepage = () => {
                     Get feedback on your performance and track your improvement over time.
                   </p>
                 </div>
-                <div className="relative group p-6 bg-white rounded-lg shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                <div className="relative group p-6 bg-violet-300 rounded-lg shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300">
                   <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-red-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                   <i className="fas fa-comments text-5xl text-pink-600 mb-4"></i>
                   <h3 className="text-xl font-semibold mb-4 text-gray-800 group-hover:text-pink-900 transition-colors duration-300">

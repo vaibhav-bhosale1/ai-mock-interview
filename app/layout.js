@@ -3,6 +3,7 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "../components/ui/toaster";
 import NextTopLoader from 'nextjs-toploader';
+import { Analytics } from "@vercel/analytics/react"
 import { ThemeProvider } from "next-themes";  // Import ThemeProvider for theme management
 
 const geistSans = Geist({

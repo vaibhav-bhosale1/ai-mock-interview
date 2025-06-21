@@ -6,6 +6,7 @@ import Hero from "./(HomePages)/Hero";
 import Howitworks from "./(HomePages)/howitworks/page";
 import Features from "./(HomePages)/features/page";
 import Footer from "./(HomePages)/Footer";
+import 'regenerator-runtime/runtime';
 import Pricing from "./(HomePages)/pricing/page";
 import BackgroundPaths from "../components/ui/BckgroundPath"; // Animated background
 
@@ -61,10 +62,7 @@ const Home = () => {
         
             <Header />
             <Hero />
-            <Howitworks />
-            <Pricing />
-            <Features />
-            <Footer />
+            
           </div>
      
       )}

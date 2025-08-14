@@ -2,6 +2,7 @@
 
 This project is an AI-powered mock interview platform designed to help users practice and improve their interview skills. The platform integrates Google Gemini to dynamically generate job-specific interview questions and provides real-time video/audio recording capabilities for the interview experience. Enhanced interactivity is achieved with Text-to-Speech and Speech-to-Text, allowing users to respond naturally and receive AI-driven feedback with actionable improvement suggestions and performance ratings.
 
+<img width="1864" height="842" alt="image" src="https://github.com/user-attachments/assets/ddc33e3e-6e6d-4bb4-a258-a0a4110c48c8" />
 
 [Click hereview project](https://virtuehirex.vercel.app)
 

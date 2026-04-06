@@ -1,16 +1,14 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { db } from "../../../../../utils/db";
-import { MockInterview } from "../../../../../utils/schema";
-import { eq } from "drizzle-orm";
 import Question from "./_components/Questions";
 import RecordAnsSection from "./_components/RecordAnsSection";
 import { LoaderPinwheel } from "lucide-react";
 import { Button } from "../../../../../components/ui/button";
 import Link from "next/link";
+import { use } from 'react';
 
 function StartInterview({ params }) {
-  const { interviewId } = params;
+  const { interviewId } = use(params);
   const [activequestionindex, setactivequestionindex] = useState(0);
   const [mockInterviewQuestion, setMockInterviewQuestion] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,26 +21,19 @@ function StartInterview({ params }) {
 
   const GetInterviewDetails = async () => {
     try {
-      const result = await db
-        .select()
-        .from(MockInterview)
-        .where(eq(MockInterview.mockId, interviewId));
+      const res = await fetch(`/api/interviews?mockId=${interviewId}`);
+      const result = await res.json();
 
-      if (!result || result.length === 0) {
-        throw new Error("Interview not found");
-      }
+      if (!result) throw new Error("Interview not found");
 
-      setinterviewData(result[0]);
+      setinterviewData(result);
 
-      const parsedQuestions = JSON.parse(result[0].jsonMockResp);
-      console.log("Parsed questions:", parsedQuestions);
-
+      const parsedQuestions = JSON.parse(result.jsonMockResp);
       if (parsedQuestions && Array.isArray(parsedQuestions.interview_questions)) {
         setMockInterviewQuestion(parsedQuestions.interview_questions);
       } else {
         throw new Error("Invalid question format");
       }
-
     } catch (error) {
       console.error("Error fetching interview details:", error);
       setError(error.message);
@@ -69,8 +60,6 @@ function StartInterview({ params }) {
   }
 
   return (
-    <>
-   
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         <Question
@@ -83,7 +72,7 @@ function StartInterview({ params }) {
           interviewData={interviewData}
         />
       </div>
-      <div className="flex justify-end gap-5 ">
+      <div className="flex justify-end gap-5">
         {activequestionindex > 0 && (
           <Button onClick={() => setactivequestionindex(activequestionindex - 1)}>
             Previous Question
@@ -95,13 +84,12 @@ function StartInterview({ params }) {
           </Button>
         )}
         {activequestionindex === mockInterviewQuestion.length - 1 && (
-          <Link href={'/dashboard/interview/' + interviewData?.mockId + '/feedback'}>
+          <Link href={"/dashboard/interview/" + interviewData?.mockId + "/feedback"}>
             <Button>End Interview</Button>
           </Link>
         )}
       </div>
     </div>
-    </>
   );
 }
 

@@ -1,14 +1,12 @@
 import Image from 'next/image';
 import React, { useState, useCallback, useRef } from 'react';
+import 'regenerator-runtime/runtime';
 import Webcam from 'react-webcam';
 import { Button } from '../../../../../../components/ui/button';
 import { Mic, Type, Save } from 'lucide-react';
 import { chatSession } from '../../../../../../utils/GeminiAiModel';
-import { db } from '../../../../../../utils/db';
 import { useUser } from '@clerk/nextjs';
 import moment from 'moment';
-import { UserAnswer } from '../../../../../../utils/schema';
-import { eq } from 'drizzle-orm';
 import { ToastContainer, toast } from 'react-toastify';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
@@ -39,17 +37,11 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
     try {
       const jsonStart = response.indexOf('{');
       const jsonEnd = response.lastIndexOf('}') + 1;
-      if (jsonStart === -1 || jsonEnd === -1) {
-        throw new Error('No valid JSON found in response');
-      }
-      const jsonStr = response.slice(jsonStart, jsonEnd);
-      return JSON.parse(jsonStr);
+      if (jsonStart === -1 || jsonEnd === -1) throw new Error('No valid JSON found');
+      return JSON.parse(response.slice(jsonStart, jsonEnd));
     } catch (error) {
       console.error('Failed to parse feedback response:', error);
-      return {
-        rating: "N/A",
-        feedback: "Unable to generate feedback at this time."
-      };
+      return { rating: "N/A", feedback: "Unable to generate feedback at this time." };
     }
   };
 
@@ -68,9 +60,6 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
         throw new Error('Required data missing');
       }
 
-      // Insert answer
-  
-      
       // Generate feedback
       const feedbackPrompt = `
       You are an expert interviewer evaluating a candidate's response.
@@ -81,42 +70,41 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
       User Answer: "${answerText}"
       
       Provide a JSON response with:
-      
       {
-        "rating": "An integer rating from 1-10 based on accuracy, completeness, and clarity. 
-                   Consider how well the answer addresses the specific question asked.",
-        "feedback": "2-3 sentences of constructive feedback. Be specific about what was done well 
-                     and areas for improvement. Focus only on the content related to concurrency and 
-                     Go channels. Ignore topics like error handling unless explicitly mentioned in the question."
+        "rating": "An integer rating from 1-10 based on accuracy, completeness, and clarity.",
+        "feedback": "2-3 sentences of constructive feedback. Be specific about what was done well and areas for improvement."
       }
       
-      Ensure the feedback is specific, helpful, and professional.please dont asses very strictly
-      Do not introduce unrelated feedback topics such as error handling unless the question explicitly asks for them. 
+      Ensure the feedback is specific, helpful, and professional. Please dont assess very strictly.
+      Do not introduce unrelated feedback topics unless the question explicitly asks for them.
       Evaluate the correctness and efficiency of the explanation and code if provided.
       `;
-      
 
       const result = await chatSession.sendMessage(feedbackPrompt);
       const responseText = await result.response.text();
       const JsonFeedbackResp = parseFeedbackResponse(responseText);
 
-      // Update with feedback
-      await db.insert(UserAnswer).values({
-        mockIdRef: interviewData.mockId,
-        question: currentQuestion.question,
-        correctAns: currentQuestion.answer,
-        userAns: answerText,
-        userEmail: user.primaryEmailAddress.emailAddress,
-        createdAt: moment().format('DD-MM-yyyy'),
-        feedback: JsonFeedbackResp.feedback, // Insert feedback directly
-        rating: JsonFeedbackResp.rating,     // Insert rating directly
+      // Save to MongoDB via API route
+      const res = await fetch('/api/answers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mockIdRef: interviewData.mockId,
+          question: currentQuestion.question,
+          correctAns: currentQuestion.answer,
+          userAns: answerText,
+          userEmail: user.primaryEmailAddress.emailAddress,
+          createdAt: moment().format('DD-MM-yyyy'),
+          feedback: JsonFeedbackResp.feedback,
+          rating: JsonFeedbackResp.rating,
+        }),
       });
-      
+
+      if (!res.ok) throw new Error('Failed to save answer');
 
       notifysuccess();
-      if (inputMethod === 'text') {
-        setTextAnswer('');
-      }
+      if (inputMethod === 'text') setTextAnswer('');
+
     } catch (error) {
       console.error('Failed to save answer:', error);
       notifyfailed();
@@ -128,17 +116,14 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
 
   const handleRecordingToggle = useCallback(() => {
     if (listening) {
-      // Stop recording and store the answer
       SpeechRecognition.stopListening();
       if (transcript) {
-        // Small delay to ensure we have the final transcript
         setTimeout(() => {
           storeAnswer(transcript);
           resetTranscript();
         }, 500);
       }
     } else {
-      // Start new recording
       resetTranscript();
       recordedAnswer.current = '';
       SpeechRecognition.startListening({ continuous: true });
@@ -147,9 +132,7 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
 
   const handleTextSubmit = (e) => {
     e.preventDefault();
-    if (textAnswer.trim()) {
-      storeAnswer(textAnswer.trim());
-    }
+    if (textAnswer.trim()) storeAnswer(textAnswer.trim());
   };
 
   if (!browserSupportsSpeechRecognition && inputMethod === 'mic') {
@@ -164,21 +147,18 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
   return (
     <div className="flex justify-center items-center flex-col">
       <div className="flex gap-2 mb-5">
-        <Button 
+        <Button
           variant={inputMethod === 'mic' ? "outline" : "default"}
-          onClick={() => {
-            setInputMethod('mic');
-            resetTranscript();
-          }}
+          onClick={() => { setInputMethod('mic'); resetTranscript(); }}
           className="flex gap-2 items-center mt-5"
         >
           <Mic className="h-4 w-4" />
           Voice Recording
         </Button>
-        <Button 
+        <Button
           variant={inputMethod === 'text' ? "outline" : "default"}
           onClick={() => setInputMethod('text')}
-          className="flex gap-2 items-center mt-5 "
+          className="flex gap-2 items-center mt-5"
         >
           <Type className="h-4 w-4" />
           Text Input
@@ -186,13 +166,7 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
       </div>
 
       <div className="flex flex-col justify-center items-center bg-black rounded-lg p-5 mt-18 border border-cyan-200">
-        <Image
-          src="/webcam.png"
-          width={300}
-          height={300}
-          alt="webcam"
-          className="absolute"
-        />
+        <Image src="/webcam.png" width={300} height={300} alt="webcam" className="absolute" />
         <Webcam mirrored={true} style={{ height: 300, width: '100%', zIndex: 10 }} />
       </div>
 
@@ -214,15 +188,10 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
           </Button>
 
           {listening && (
-            <div className="text-sm text-gray-600 mb-4">
-              Recording: {transcript}
-            </div>
+            <div className="text-sm text-gray-600 mb-4">Recording: {transcript}</div>
           )}
-
           {!listening && transcript && (
-            <div className="text-sm text-gray-600 mb-4">
-              Last recorded answer: {transcript}
-            </div>
+            <div className="text-sm text-gray-600 mb-4">Last recorded answer: {transcript}</div>
           )}
         </div>
       ) : (
@@ -234,9 +203,9 @@ function RecordAnsSection({ mockInterviewQuestion, activequestionindex, intervie
             className="w-full p-3 border rounded-lg min-h-[100px] mb-2"
             disabled={loading}
           />
-          <Button 
-            type="submit" 
-            disabled={loading || !textAnswer.trim()} 
+          <Button
+            type="submit"
+            disabled={loading || !textAnswer.trim()}
             className="w-full flex gap-2 items-center justify-center"
           >
             <Save className="h-4 w-4" />

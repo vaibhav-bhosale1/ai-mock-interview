@@ -1,9 +1,12 @@
-import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
-import { config } from "dotenv";
-import * as schema from './schema'
+import mongoose from "mongoose";
 
-config({ path: ".env.local" }); // or .env.local
+const MONGODB_URI = "mongodb+srv://vaibhav:vaibhav@cluster0.bsav5vw.mongodb.net/ai-mock-interview?retryWrites=true&w=majority&appName=Cluster0";
 
-const sql = neon(process.env.NEXT_PUBLIC_DRIZZLE_DB_URL);
-export const db = drizzle( sql,{schema});
+let cached = global.mongoose || { conn: null, promise: null };
+
+export async function connectDB() {
+  if (cached.conn) return cached.conn;
+  cached.promise = cached.promise || mongoose.connect(MONGODB_URI);
+  cached.conn = await cached.promise;
+  return cached.conn;
+}

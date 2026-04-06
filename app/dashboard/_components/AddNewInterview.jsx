@@ -1,8 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import { chatSession } from "../../../utils/GeminiAiModel";
-import { v4 as uuidv4 } from "uuid";
-import { db } from "../../../utils/db";
 import {
   Dialog,
   DialogContent,
@@ -14,11 +12,9 @@ import { Button } from "../../../components/ui/button";
 import { Textarea } from "../../../components/ui/textarea";
 import { Input } from "../../../components/ui/input";
 import { LoaderPinwheel } from "lucide-react";
-import { MockInterview } from "../../../utils/schema";
 import { useUser } from "@clerk/nextjs";
 import moment from "moment";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 const AddNewInterview = () => {
   const [opendialog, setopendialog] = useState(false);
@@ -32,9 +28,10 @@ const AddNewInterview = () => {
   const { user } = useUser();
 
   const onSubmit = async (event) => {
-    setloading(true);
     event.preventDefault();
-    
+    setloading(true);
+    setError("");
+
     const Inputprompt = `Generate a technical interview for the following position:
     - Job Position: ${jobposition}
     - Job Description: ${jobdesc}
@@ -53,52 +50,51 @@ const AddNewInterview = () => {
     }
     
     The response must be valid JSON only, properly formatted as plain text. Ensure that any code included is correctly formatted without extra markdown, symbols, or explanations. Do not include any additional text outside the JSON response.No additional text or formatted`;
-    
-  
+
     try {
       const result = await chatSession.sendMessage(Inputprompt);
       let MockJsonResp = await result.response.text();
-      
+
       // Clean the response
       MockJsonResp = MockJsonResp.replace(/```json\n?/g, "")
-                                .replace(/```\n?/g, "")
-                                .trim();
-      
-      console.log("Raw JSON string:", MockJsonResp);
-      
+                                  .replace(/```\n?/g, "")
+                                  .trim();
+
       // Parse and validate
       const parsedResponse = JSON.parse(MockJsonResp);
-      
+
       if (!parsedResponse.interview_questions || !Array.isArray(parsedResponse.interview_questions)) {
         throw new Error("Invalid response format from AI");
       }
-  
-      // Store in database
-      const resp = await db
-        .insert(MockInterview)
-        .values({
-          mockId: uuidv4(),
+
+      // Save to MongoDB via API route
+      const res = await fetch("/api/interviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           jsonMockResp: MockJsonResp,
           jobPosition: jobposition,
           jobDesc: jobdesc,
           jobExperience: jobexp,
           createdBy: user?.primaryEmailAddress?.emailAddress,
           createdAt: moment().format("DD-MM-yyyy"),
-        })
-        .returning({ mockId: MockInterview.mockId });
-  
+          mockId: Date.now().toString(),
+        }),
+      });
+
+      const data = await res.json();
+
       setloading(false);
       setopendialog(false);
-      
-      if (resp && resp[0]?.mockId) {
-        router.push("/dashboard/interview/" + resp[0].mockId)
-        
+
+      if (data?.mockId) {
+        router.push("/dashboard/interview/" + data.mockId);
       }
-  
+
     } catch (error) {
       console.error("Error:", error);
+      setError("Failed to create interview. Please try again.");
       setloading(false);
-      alert("Failed to create interview. Please try again.");
     }
   };
 
@@ -156,7 +152,6 @@ const AddNewInterview = () => {
                       onChange={(event) => setjobexp(event.target.value)}
                     />
                   </div>
-
                   <div className="my-3">
                     <label>Number of Questions</label>
                     <Input
@@ -169,7 +164,6 @@ const AddNewInterview = () => {
                       onChange={(event) => setNumQuestions(event.target.value)}
                     />
                   </div>
-
                 </div>
                 <div className="flex gap-5 justify-end">
                   <Button

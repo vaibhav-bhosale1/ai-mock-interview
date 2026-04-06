@@ -1,24 +1,28 @@
-import { pgTable, serial, text, varchar } from "drizzle-orm/pg-core";
+import mongoose from "mongoose";
 
-export const MockInterview=pgTable('mockinterview',{
-    id:serial('id').primaryKey(),
-    jsonMockResp:text('jsonMockResp').notNull(),
-    jobPosition:varchar('jobPosition').notNull(),
-    jobDesc:varchar('jobDesc').notNull(),
-    jobExperience:varchar('jobExperience').notNull(),
-    createdBy:varchar('createdBy').notNull(),
-    createdAt:varchar('createdAt').notNull(),
-    mockId:varchar('mockId').notNull(),
-})
+const MockInterviewSchema = new mongoose.Schema({
+  jsonMockResp: { type: String, required: true },
+  jobPosition:  { type: String, required: true },
+  jobDesc:      { type: String, required: true },
+  jobExperience:{ type: String, required: true },
+  createdBy:    { type: String, required: true },
+  createdAt:    { type: String, required: true },
+  mockId:       { type: String, required: true },
+});
 
-export const UserAnswer=pgTable('userAnswer',{
-    id:serial('id').primaryKey(),
-    mockIdRef:varchar('mockId').notNull(),
-    question:varchar('question').notNull(),
-    correctAns:varchar('correctAns'),
-    userAns:text('userAns'),
-    feedback:text('feedback'),
-    rating:varchar('rating'),
-    userEmail:varchar('userEmail').notNull(),
-    createdAt:varchar('createdAt')
-})
+const UserAnswerSchema = new mongoose.Schema({
+  mockIdRef:  { type: String, required: true },
+  question:   { type: String, required: true },
+  correctAns: { type: String },
+  userAns:    { type: String },
+  feedback:   { type: String },
+  rating:     { type: String },
+  userEmail:  { type: String, required: true },
+  createdAt:  { type: String },
+});
+
+export const MockInterview = mongoose.models.MockInterview
+  || mongoose.model("MockInterview", MockInterviewSchema);
+
+export const UserAnswer = mongoose.models.UserAnswer
+  || mongoose.model("UserAnswer", UserAnswerSchema);
